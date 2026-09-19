@@ -1,0 +1,17 @@
+{
+  "groups": [
+    {
+      "name": "outbox.schema-initialization",
+      "type": "dev.danielbodi.thesis.outbox.persistence.OutboxSchemaInitializer",
+      "description": "Controls the creation of the outbox table on application startup."
+    }
+  ],
+  "properties": [
+    {
+      "name": "outbox.schema-initialization.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Whether to create the outbox table on startup when it does not yet exist."
+    }
+  ]
+}
