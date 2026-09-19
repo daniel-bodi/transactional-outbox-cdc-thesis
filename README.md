@@ -19,3 +19,15 @@ The implemented system is subjected to intentional fault injections, such as hal
 specific phases of the transaction or simulating the failure of various infrastructure components. Following each 
 fault scenario, predefined consistency conditions are evaluated. The goal of these measurements is to determine 
 which types of failures the pattern effectively mitigates, the associated trade-offs, and its inherent limitations.
+
+## Technology stack
+
+| Kind                     | Technology | Version     |
+|--------------------------|------------|-------------|
+| **Programming language** | Java       | 25 LTS      |
+| **Framework**            | Spring Boot| 4.1.1       |
+| **RDBMS**                | PostgreSQL | 18.6        |
+| **Message Broker**       | Apache Kafka | 4.3.1     |
+| **CDC**                  | Debezium   | 3.6.3.Final |
+| **Testing**              | Testcontainers | 2.0.5   |
+| **Orchestration**        | Docker Compose | -       |
