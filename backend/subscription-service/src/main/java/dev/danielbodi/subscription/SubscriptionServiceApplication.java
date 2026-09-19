@@ -7,8 +7,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @author danielbodi
  */
 @SpringBootApplication
-public class SubscriptionApplication {
+public class SubscriptionServiceApplication {
     public static void main(String[] args) {
-        SpringApplication.run(SubscriptionApplication.class, args);
+        SpringApplication.run(SubscriptionServiceApplication.class, args);
     }
 }
