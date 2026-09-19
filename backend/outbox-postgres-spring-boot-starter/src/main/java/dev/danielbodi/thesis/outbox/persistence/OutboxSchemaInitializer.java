@@ -14,7 +14,7 @@ import java.util.List;
 @Slf4j
 public class OutboxSchemaInitializer extends DataSourceScriptDatabaseInitializer {
 
-    private static final String SCHEMA_LOCATION = "classpath:migration/outbox-schema.sql";
+    private static final String SCHEMA_LOCATION = "classpath:database/migration/outbox-schema.sql";
 
     public OutboxSchemaInitializer(DataSource dataSource) {
         super(dataSource, schemaSettings());
