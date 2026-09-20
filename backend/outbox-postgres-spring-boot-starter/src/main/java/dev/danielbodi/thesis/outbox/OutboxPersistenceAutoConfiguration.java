@@ -4,6 +4,7 @@ import dev.danielbodi.thesis.outbox.event.OutboxEventPublisher;
 import dev.danielbodi.thesis.outbox.persistence.OutboxFactory;
 import dev.danielbodi.thesis.outbox.persistence.OutboxRepository;
 import dev.danielbodi.thesis.outbox.persistence.OutboxSchemaInitializer;
+import dev.danielbodi.thesis.outbox.tracing.OutboxTraceContextProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -21,7 +22,7 @@ import javax.sql.DataSource;
  */
 @AutoConfiguration(after = {DataSourceAutoConfiguration.class, JdbcTemplateAutoConfiguration.class})
 @ConditionalOnSingleCandidate(DataSource.class)
-public class OutboxAutoConfiguration {
+public class OutboxPersistenceAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
@@ -38,8 +39,8 @@ public class OutboxAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    OutboxFactory outboxEntityFactory(ObjectMapper objectMapper) {
-        return new OutboxFactory(objectMapper);
+    OutboxFactory outboxEntityFactory(ObjectMapper objectMapper, OutboxTraceContextProvider traceContextProvider) {
+        return new OutboxFactory(objectMapper, traceContextProvider);
     }
 
     @Bean

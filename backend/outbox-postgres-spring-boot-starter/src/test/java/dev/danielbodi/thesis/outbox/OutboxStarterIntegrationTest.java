@@ -2,6 +2,8 @@ package dev.danielbodi.thesis.outbox;
 
 import dev.danielbodi.thesis.outbox.event.OutboxEvent;
 import dev.danielbodi.thesis.outbox.event.OutboxEventPublisher;
+import io.micrometer.tracing.Span;
+import io.micrometer.tracing.Tracer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +44,9 @@ class OutboxStarterIntegrationTest {
 
     @Autowired
     private PlatformTransactionManager transactionManager;
+
+    @Autowired
+    private Tracer tracer;
 
     private TransactionTemplate transactionTemplate;
 
@@ -85,6 +90,8 @@ class OutboxStarterIntegrationTest {
             final String amountValue = jdbcTemplate.queryForObject(
                     "SELECT payload ->> 'amount' FROM outbox", String.class);
             softly.assertThat(amountValue).isEqualTo("100");
+            // no active span, so no trace context is recorded.
+            assertThat(singleStringColumn("trace_id")).isNull();
         });
     }
 
@@ -99,7 +106,7 @@ class OutboxStarterIntegrationTest {
     }
 
     @Test
-    void discardsOutboxRecordTogetherWithBusinessWrite() {
+    void rollbackDiscardsOutboxRecordTogetherWithBusinessWrite() {
         transactionTemplate.executeWithoutResult(status -> {
             jdbcTemplate.update("INSERT INTO business_record (id) VALUES (?)", "record-1");
             outboxEventPublisher.publish(new TestEvent());
@@ -113,7 +120,7 @@ class OutboxStarterIntegrationTest {
     }
 
     @Test
-    void keepsOutboxRecordTogetherWithBusinessWriteOnCommit() {
+    void commitKeepsOutboxRecordTogetherWithBusinessWrite() {
         transactionTemplate.executeWithoutResult(status -> {
             jdbcTemplate.update("INSERT INTO business_record (id) VALUES (?)", "record-1");
             outboxEventPublisher.publish(new TestEvent());
@@ -123,6 +130,18 @@ class OutboxStarterIntegrationTest {
             softly.assertThat(businessRowCount()).isEqualTo(1);
             softly.assertThat(outboxRowCount()).isEqualTo(1);
         });
+    }
+
+    @Test
+    void outboxRecordHasTraceIdWhenActiveSpanIsAvailable() {
+        final Span span = tracer.nextSpan().name("test-publish").start();
+        try (Tracer.SpanInScope ignored = tracer.withSpan(span)) {
+            transactionTemplate.executeWithoutResult(status -> outboxEventPublisher.publish(new TestEvent()));
+        } finally {
+            span.end();
+        }
+
+        assertThat(singleStringColumn("trace_id")).matches("^00-[0-9a-f]{32}-[0-9a-f]{16}-(00|01)$");
     }
 
     private Integer outboxRowCount() {
@@ -138,11 +157,6 @@ class OutboxStarterIntegrationTest {
     }
 
     static final class TestEvent implements OutboxEvent {
-
-        @Override
-        public String getTraceId() {
-            return "trace-1";
-        }
 
         @Override
         public String getAggregateId() {

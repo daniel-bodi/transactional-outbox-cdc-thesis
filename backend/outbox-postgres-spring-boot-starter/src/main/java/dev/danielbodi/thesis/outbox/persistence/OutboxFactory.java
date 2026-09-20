@@ -1,6 +1,7 @@
 package dev.danielbodi.thesis.outbox.persistence;
 
 import dev.danielbodi.thesis.outbox.event.OutboxEvent;
+import dev.danielbodi.thesis.outbox.tracing.OutboxTraceContextProvider;
 import lombok.RequiredArgsConstructor;
 import tools.jackson.databind.ObjectMapper;
 
@@ -13,22 +14,13 @@ import java.util.UUID;
 public class OutboxFactory {
 
     private final ObjectMapper objectMapper;
+    private final OutboxTraceContextProvider traceContextProvider;
 
-    public Outbox from(OutboxEvent outboxEvent) {
-        return from(outboxEvent.getTraceId(),
-                outboxEvent.getAggregateId(),
-                outboxEvent.getAggregateType(),
-                outboxEvent.getEventType(),
-                outboxEvent);
-    }
+    public Outbox from(OutboxEvent event) {
+        final UUID id = UUID.randomUUID();
+        final String payload = objectMapper.writeValueAsString(event);
+        final String traceId = traceContextProvider.currentTraceContext();
 
-    public Outbox from(String traceId, String aggregateId, String aggregateType, String eventType, Object payload) {
-        return new Outbox(
-                UUID.randomUUID(),
-                traceId,
-                aggregateId,
-                aggregateType,
-                eventType,
-                objectMapper.writeValueAsString(payload));
+        return new Outbox(id, traceId, event.getAggregateId(), event.getAggregateType(), event.getEventType(), payload);
     }
 }

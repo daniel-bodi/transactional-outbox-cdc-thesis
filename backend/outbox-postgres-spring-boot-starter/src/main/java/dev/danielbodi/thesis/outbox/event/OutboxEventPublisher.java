@@ -21,18 +21,9 @@ public class OutboxEventPublisher {
     @Transactional(propagation = Propagation.MANDATORY)
     public void publish(OutboxEvent outboxEvent) {
         final Outbox outbox = outboxFactory.from(outboxEvent);
-        save(outbox);
-    }
 
-    @Transactional(propagation = Propagation.MANDATORY)
-    public void publish(String traceId, String aggregateId, String aggregateType, String eventType, Object payload) {
-        final Outbox outbox = outboxFactory.from(traceId, aggregateId, aggregateType, eventType, payload);
-        save(outbox);
-    }
-
-    private void save(Outbox outbox) {
         outboxRepository.save(outbox);
-        log.debug("Writing outbox event [id={}, type={}, aggregateType={}, aggregateId={}, traceId={}]",
+        log.debug("Writing outbox event [id={}, type={}, aggregateType={}, aggregateId={}, traceContext={}]",
                 outbox.id(), outbox.type(), outbox.aggregateType(), outbox.aggregateId(), outbox.traceId());
     }
 }

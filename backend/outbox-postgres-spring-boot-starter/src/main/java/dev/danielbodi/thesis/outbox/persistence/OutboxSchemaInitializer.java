@@ -25,9 +25,9 @@ public class OutboxSchemaInitializer extends DataSourceScriptDatabaseInitializer
         final boolean applied = super.initializeDatabase();
 
         if (applied) {
-            log.info("Outbox schema script applied from: [{}]", SCHEMA_LOCATION);
+            log.info("Outbox schema initializer executed: [{}] outbox table created if missing", SCHEMA_LOCATION);
         } else {
-            log.debug("Outbox schema initialization skipped");
+            log.info("Outbox schema initializer skipped");
         }
 
         return applied;

@@ -1,1 +1,3 @@
-dev.danielbodi.thesis.outbox.OutboxAutoConfiguration
+dev.danielbodi.thesis.outbox.OutboxPersistenceAutoConfiguration
+dev.danielbodi.thesis.outbox.OutboxMicrometerTracingAutoConfiguration
+dev.danielbodi.thesis.outbox.OutboxFallbackTracingAutoConfiguration

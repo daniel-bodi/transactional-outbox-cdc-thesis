@@ -5,7 +5,6 @@ package dev.danielbodi.thesis.outbox.event;
  */
 public interface OutboxEvent {
 
-    String getTraceId();
     String getAggregateId();
     String getAggregateType();
 
