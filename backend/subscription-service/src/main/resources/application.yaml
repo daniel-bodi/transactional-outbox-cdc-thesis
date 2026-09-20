@@ -1,11 +1,14 @@
+springdotenv:
+  directory: ../../
+
 spring:
   application:
     name: subscription-service
 
   datasource:
-    url: ${DATASOURCE_URL:jdbc:postgresql://localhost:5432/subscription}
-    username: ${DATASOURCE_USERNAME:subscription}
-    password: ${DATASOURCE_PASSWORD:subscription}
+    url: jdbc:postgresql://${SUBSCRIPTION_DB_HOST}:${SUBSCRIPTION_DB_PORT}/${SUBSCRIPTION_DB_NAME}
+    username: ${SUBSCRIPTION_DB_USER}
+    password: ${SUBSCRIPTION_DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -22,5 +25,4 @@ spring:
 
 logging:
   pattern:
-    #console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level [traceId=%X{traceId:-} spanId=%X{spanId:-}] %logger{36} - %msg%n"
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level [traceId:%X{traceId} spanId:%X{spanId}] %logger{36} - %msg%n"
