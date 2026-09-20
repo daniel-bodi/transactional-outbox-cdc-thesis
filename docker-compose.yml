@@ -16,7 +16,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - subscription-db-data:/var/lib/postgresql/data
+      - subscription-db-data:/var/lib/postgresql
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U subscription -d subscription" ]
       interval: 5s
