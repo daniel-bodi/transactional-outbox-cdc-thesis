@@ -18,6 +18,8 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
@@ -87,9 +89,17 @@ class OutboxStarterIntegrationTest {
             softly.assertThat(singleStringColumn("aggregate_id")).isEqualTo("subscription-1");
             softly.assertThat(singleStringColumn("aggregate_type")).isEqualTo("Subscription");
             softly.assertThat(singleStringColumn("type")).isEqualTo("TestEvent");
+
             final String amountValue = jdbcTemplate.queryForObject(
                     "SELECT payload ->> 'amount' FROM outbox", String.class);
             softly.assertThat(amountValue).isEqualTo("100");
+
+            // payload carries only business content, so envelope fields (aggregateId, aggregateType, eventType)
+            // stay in their own outbox columns, not in the payload
+            final List<String> payloadKeys = jdbcTemplate.queryForList(
+                    "SELECT jsonb_object_keys(payload) FROM outbox", String.class);
+            softly.assertThat(payloadKeys).containsExactly("amount");
+
             // no active span, so no trace context is recorded.
             assertThat(singleStringColumn("trace_id")).isNull();
         });
