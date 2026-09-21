@@ -23,6 +23,7 @@
 
     <modules>
         <module>subscription-service</module>
+        <module>payment-service</module>
         <module>outbox-postgres-spring-boot-starter</module>
     </modules>
 
