@@ -31,3 +31,43 @@ which types of failures the pattern effectively mitigates, the associated trade-
 | **CDC**                  | Debezium   | 3.6.3.Final |
 | **Testing**              | Testcontainers | 2.0.5   |
 | **Orchestration**        | Docker Compose | -       |
+
+## Repository structure
+
+```
+transactional-outbox-cdc-thesis/
+├── backend/                                    Maven multi-module Java project
+│   ├── outbox-postgres-spring-boot-starter/    Reusable outbox producer library
+│   └── subscription-service/                   Reference producer service
+├── infrastructure/
+│   └── debezium/                               Connector definitions and registration script
+├── docker-compose.yml                          PostgreSQL, Kafka, Kafka Connect, Kafbat UI
+└── .env.example                                Environment variable template (copy to .env)
+```
+
+## Prerequisites
+
+- **Java 25** (Eclipse Temurin recommended)
+- **Docker Desktop**, or Docker Engine with the Compose plugin
+- **Bash shell** with `curl` available (macOS/Linux; on Windows via WSL)
+
+The Maven wrapper (`mvnw`) is bundled under `backend/`; a separate Maven installation is not required.
+
+## Getting started
+
+```bash
+# 1. Create the local environment file
+cp .env.example .env
+
+# 2. Start the infrastructure stack (PostgreSQL, Kafka, Kafka Connect, Kafbat UI)
+docker compose up -d
+
+# 3. Register the Debezium outbox connector
+./infrastructure/debezium/register-connectors.sh
+
+# 4. Run the subscription service
+cd backend
+./mvnw -pl subscription-service spring-boot:run
+```
+
+Once started, the subscription service listens on `http://localhost:8080` and the Kafbat UI on `http://localhost:8081`.
