@@ -20,7 +20,7 @@ import java.math.BigDecimal;
 public class PaymentRequestedEvent implements OutboxEvent {
 
     public static final String AGGREGATE_TYPE = "Subscription";
-    public static final String EVENT_TYPE = "PaymentRequested";
+    public static final String EVENT_TYPE = "payment_requested";
 
     private final String aggregateId;
     private final String reference;

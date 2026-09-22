@@ -23,7 +23,7 @@
   "transforms.outbox.route.topic.replacement": "outbox.event.${routedByValue}",
   "transforms.outbox.table.field.event.key": "aggregate_id",
   "transforms.outbox.table.expand.json.payload": "true",
-  "transforms.outbox.table.fields.additional.placement": "trace_id:header:traceparent,type:header:__TypeId__",
+  "transforms.outbox.table.fields.additional.placement": "trace_id:header:traceparent",
 
   "key.converter": "org.apache.kafka.connect.storage.StringConverter",
   "value.converter": "org.apache.kafka.connect.json.JsonConverter",
