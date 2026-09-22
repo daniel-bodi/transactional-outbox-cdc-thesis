@@ -38,7 +38,8 @@ which types of failures the pattern effectively mitigates, the associated trade-
 transactional-outbox-cdc-thesis/
 ├── backend/                                    Maven multi-module Java project
 │   ├── outbox-postgres-spring-boot-starter/    Reusable outbox producer library
-│   └── subscription-service/                   Reference producer service
+│   ├── subscription-service/                   Reference producer service
+│   └── payment-service/                        Reference consumer service
 ├── infrastructure/
 │   └── debezium/                               Connector definitions and registration script
 ├── docker-compose.yml                          PostgreSQL, Kafka, Kafka Connect, Kafbat UI
@@ -59,15 +60,20 @@ The Maven wrapper (`mvnw`) is bundled under `backend/`; a separate Maven install
 # 1. Create the local environment file
 cp .env.example .env
 
-# 2. Start the infrastructure stack (PostgreSQL, Kafka, Kafka Connect, Kafbat UI)
+# 2. Start the infrastructure stack (PostgreSQL databases, Kafka, Kafka Connect, Kafbat UI)
 docker compose up -d
 
-# 3. Register the Debezium outbox connector
-./infrastructure/debezium/register-connectors.sh
-
-# 4. Run the subscription service
+# 3. Start the backend services (each in its own terminal).
+#    Their Flyway migrations create the tables Debezium relies on,
+#    so this must happen before the connector is registered.
 cd backend
 ./mvnw -pl subscription-service spring-boot:run
+./mvnw -pl payment-service spring-boot:run
+
+# 4. Register the Debezium outbox connector.
+#    Requires the services above to have completed their Flyway migrations;
+#    otherwise the connector fails because the observed tables do not yet exist.
+./infrastructure/debezium/register-connectors.sh
 ```
 
 Once started, the subscription service listens on `http://localhost:8080` and the Kafbat UI on `http://localhost:8081`.
