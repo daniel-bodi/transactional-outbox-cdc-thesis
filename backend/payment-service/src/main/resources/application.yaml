@@ -1,3 +1,37 @@
+springdotenv:
+  directory: ../../
+
 spring:
   application:
     name: payment-service
+
+  datasource:
+    url: jdbc:postgresql://${PAYMENT_DB_HOST}:${PAYMENT_DB_PORT}/${PAYMENT_DB_NAME}
+    username: ${PAYMENT_DB_USER}
+    password: ${PAYMENT_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  kafka:
+    bootstrap-servers: localhost:${KAFKA_PORT}
+    consumer:
+      group-id: payment-service
+      auto-offset-reset: earliest
+      value-deserializer: org.apache.kafka.common.serialization.ByteArrayDeserializer
+    listener:
+      observation-enabled: true
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level [traceId:%X{traceId} spanId:%X{spanId}] %logger{36} - %msg%n"
