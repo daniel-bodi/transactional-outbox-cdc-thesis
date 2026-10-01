@@ -22,10 +22,11 @@
     </properties>
 
     <modules>
-        <module>subscription-service</module>
-        <module>payment-service</module>
-        <module>outbox-postgres-spring-boot-starter</module>
         <module>inbox-postgres-spring-boot-starter</module>
+        <module>outbox-postgres-spring-boot-starter</module>
+        <module>payment-service</module>
+        <module>psp-mock-service</module>
+        <module>subscription-service</module>
     </modules>
 
     <dependencyManagement>
