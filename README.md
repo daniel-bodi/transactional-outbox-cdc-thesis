@@ -38,11 +38,13 @@ which types of failures the pattern effectively mitigates, the associated trade-
 transactional-outbox-cdc-thesis/
 ├── backend/                                    Maven multi-module Java project
 │   ├── outbox-postgres-spring-boot-starter/    Reusable outbox producer library
+│   ├── inbox-postgres-spring-boot-starter/     Reusable idempotent consumer library
 │   ├── subscription-service/                   Reference producer service
-│   └── payment-service/                        Reference consumer service
+│   ├── payment-service/                        Reference consumer service
+│   └── psp-mock-service/                       Payment service provider mock with a durable charge log
 ├── infrastructure/
 │   └── debezium/                               Connector definitions and registration script
-├── docker-compose.yml                          PostgreSQL, Kafka, Kafka Connect, Kafbat UI
+├── docker-compose.yml                          PostgreSQL databases, Kafka, Kafka Connect, Kafbat UI
 └── .env.example                                Environment variable template (copy to .env)
 ```
 
@@ -69,6 +71,7 @@ docker compose up -d
 cd backend
 ./mvnw -pl subscription-service spring-boot:run
 ./mvnw -pl payment-service spring-boot:run
+./mvnw -pl psp-mock-service spring-boot:run
 
 # 4. Register the Debezium outbox connector.
 #    Requires the services above to have completed their Flyway migrations;
@@ -76,4 +79,4 @@ cd backend
 ./infrastructure/debezium/register-connectors.sh
 ```
 
-Once started, the subscription service listens on `http://localhost:8080` and the Kafbat UI on `http://localhost:8081`.
+Once started, the subscription service listens on `http://localhost:8080`, the PSP mock on `http://localhost:8082` and the Kafbat UI on `http://localhost:8081`.
