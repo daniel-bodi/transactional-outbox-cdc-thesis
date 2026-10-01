@@ -44,6 +44,23 @@ services:
       timeout: 5s
       retries: 10
 
+  psp-db:
+    image: postgres:18.6
+    container_name: psp-db
+    environment:
+      POSTGRES_DB: ${PSP_DB_NAME}
+      POSTGRES_USER: ${PSP_DB_USER}
+      POSTGRES_PASSWORD: ${PSP_DB_PASSWORD}
+    ports:
+      - "${PSP_DB_PORT}:5432"
+    volumes:
+      - psp-db-data:/var/lib/postgresql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${PSP_DB_USER} -d ${PSP_DB_NAME}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   kafka:
     image: apache/kafka:4.3.1
     container_name: kafka
@@ -118,4 +135,5 @@ services:
 volumes:
   subscription-db-data:
   payment-db-data:
+  psp-db-data:
   kafka-data:
