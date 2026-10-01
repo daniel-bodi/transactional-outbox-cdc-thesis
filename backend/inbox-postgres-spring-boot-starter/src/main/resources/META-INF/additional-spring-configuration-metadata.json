@@ -1,0 +1,23 @@
+{
+  "groups": [
+    {
+      "name": "inbox.schema-initialization",
+      "type": "dev.danielbodi.thesis.inbox.persistence.InboxSchemaInitializer",
+      "description": "Controls the creation of the processed_events table on application startup."
+    }
+  ],
+  "properties": [
+    {
+      "name": "inbox.schema-initialization.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Whether to create the processed_events table on startup when it does not yet exist."
+    },
+    {
+      "name": "inbox.event-id-header",
+      "type": "java.lang.String",
+      "defaultValue": "id",
+      "description": "Name of the Kafka record header carrying the event id used for deduplication."
+    }
+  ]
+}

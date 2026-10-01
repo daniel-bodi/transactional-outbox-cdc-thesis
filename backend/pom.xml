@@ -25,6 +25,7 @@
         <module>subscription-service</module>
         <module>payment-service</module>
         <module>outbox-postgres-spring-boot-starter</module>
+        <module>inbox-postgres-spring-boot-starter</module>
     </modules>
 
     <dependencyManagement>
@@ -32,6 +33,11 @@
             <dependency>
                 <groupId>dev.danielbodi.thesis</groupId>
                 <artifactId>outbox-postgres-spring-boot-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.danielbodi.thesis</groupId>
+                <artifactId>inbox-postgres-spring-boot-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
