@@ -88,7 +88,7 @@ class OutboxStarterIntegrationTest {
             // record data
             softly.assertThat(singleStringColumn("aggregate_id")).isEqualTo("subscription-1");
             softly.assertThat(singleStringColumn("aggregate_type")).isEqualTo("Subscription");
-            softly.assertThat(singleStringColumn("type")).isEqualTo("TestEvent");
+            softly.assertThat(singleStringColumn("type")).isEqualTo("test_event");
 
             final String amountValue = jdbcTemplate.queryForObject(
                     "SELECT payload ->> 'amount' FROM outbox", String.class);
@@ -176,6 +176,11 @@ class OutboxStarterIntegrationTest {
         @Override
         public String getAggregateType() {
             return "Subscription";
+        }
+
+        @Override
+        public String getEventType() {
+            return "test_event";
         }
 
         public String getAmount() {

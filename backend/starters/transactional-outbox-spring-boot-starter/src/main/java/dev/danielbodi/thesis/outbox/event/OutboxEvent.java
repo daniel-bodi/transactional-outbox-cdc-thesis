@@ -14,7 +14,5 @@ public interface OutboxEvent {
     String getAggregateType();
 
     @JsonIgnore
-    default String getEventType() {
-        return getClass().getSimpleName();
-    }
+    String getEventType();
 }
