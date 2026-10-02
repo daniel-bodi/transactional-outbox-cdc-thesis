@@ -39,7 +39,7 @@ public class OutboxPersistenceAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    OutboxFactory outboxEntityFactory(ObjectMapper objectMapper, OutboxTraceContextProvider traceContextProvider) {
+    OutboxFactory outboxFactory(ObjectMapper objectMapper, OutboxTraceContextProvider traceContextProvider) {
         return new OutboxFactory(objectMapper, traceContextProvider);
     }
 

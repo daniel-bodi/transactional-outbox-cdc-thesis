@@ -1,13 +1,12 @@
 package dev.danielbodi.thesis.idempotency;
 
 import dev.danielbodi.thesis.idempotency.aspect.IdempotencyAspect;
-import dev.danielbodi.thesis.idempotency.kafka.EventIdRecordInterceptor;
+import dev.danielbodi.thesis.idempotency.kafka.ConsumedRecordInterceptor;
 import dev.danielbodi.thesis.idempotency.persistence.ProcessedEventsSchemaInitializer;
 import dev.danielbodi.thesis.idempotency.persistence.ProcessedEventRepository;
 import dev.danielbodi.thesis.idempotency.validation.IdempotentContractValidator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
@@ -28,7 +27,6 @@ import javax.sql.DataSource;
                             JdbcTemplateAutoConfiguration.class,
                             TransactionAutoConfiguration.class})
 @ConditionalOnSingleCandidate(DataSource.class)
-@ConditionalOnClass(TransactionTemplate.class)
 public class IdempotentConsumerAutoConfiguration {
 
     @Bean
@@ -53,8 +51,8 @@ public class IdempotentConsumerAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(RecordInterceptor.class)
-    EventIdRecordInterceptor eventIdRecordInterceptor(@Value("${idempotent-consumer.event-id-header:id}") String headerName) {
-        return new EventIdRecordInterceptor(headerName);
+    ConsumedRecordInterceptor consumedRecordInterceptor(@Value("${idempotent-consumer.event-id-header:id}") String headerName) {
+        return new ConsumedRecordInterceptor(headerName);
     }
 
     @Bean

@@ -46,7 +46,7 @@ class OutboxStarterAutoConfigurationTest {
     }
 
     @Test
-    void autoConfigurationNotRegistersWhenApplicationDefinesItsOwnPublisher() {
+    void autoConfigurationBacksOffWhenApplicationDefinesItsOwnPublisher() {
         final OutboxEventPublisher applicationBean = mock(OutboxEventPublisher.class);
 
         contextRunner
@@ -58,7 +58,7 @@ class OutboxStarterAutoConfigurationTest {
     }
 
     @Test
-    void autoConfigurationNotRegistersWhenApplicationDefinesItsOwnRepository() {
+    void autoConfigurationBacksOffWhenApplicationDefinesItsOwnRepository() {
         final OutboxRepository applicationBean = mock(OutboxRepository.class);
 
         contextRunner
@@ -108,7 +108,7 @@ class OutboxStarterAutoConfigurationTest {
     }
 
     @Test
-    void autoConfigurationNotRegistersWhenApplicationDefinesItsOwnOutboxTraceContextProvider() {
+    void autoConfigurationBacksOffWhenApplicationDefinesItsOwnOutboxTraceContextProvider() {
         final OutboxTraceContextProvider applicationBean = mock(OutboxTraceContextProvider.class);
 
         contextRunner

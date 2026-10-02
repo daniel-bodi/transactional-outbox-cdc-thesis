@@ -10,7 +10,7 @@ import org.springframework.kafka.listener.RecordInterceptor;
  * @author danielbodi
  */
 @RequiredArgsConstructor
-public class EventIdRecordInterceptor implements RecordInterceptor<Object, Object> {
+public class ConsumedRecordInterceptor implements RecordInterceptor<Object, Object> {
 
     private final String headerName;
 

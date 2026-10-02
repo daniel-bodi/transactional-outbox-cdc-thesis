@@ -15,28 +15,16 @@ import java.util.UUID;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class SubscriptionActivationService {
+public class FailSubscriptionService {
 
     private final SubscriptionRepository subscriptionRepository;
 
     @Transactional
-    public void activate(UUID subscriptionId) {
-        final Subscription subscription = find(subscriptionId);
-        subscription.activate();
-
-        log.info("Subscription [{}] activated", subscriptionId);
-    }
-
-    @Transactional
     public void fail(UUID subscriptionId) {
-        final Subscription subscription = find(subscriptionId);
+        final Subscription subscription = subscriptionRepository.findById(subscriptionId)
+                .orElseThrow(() -> new IllegalArgumentException("No such subscription: " + subscriptionId));
         subscription.fail();
 
         log.info("Subscription [{}] failed due to declined payment", subscriptionId);
-    }
-
-    private Subscription find(UUID subscriptionId) {
-        return subscriptionRepository.findById(subscriptionId)
-                .orElseThrow(() -> new IllegalArgumentException("No such subscription: " + subscriptionId));
     }
 }

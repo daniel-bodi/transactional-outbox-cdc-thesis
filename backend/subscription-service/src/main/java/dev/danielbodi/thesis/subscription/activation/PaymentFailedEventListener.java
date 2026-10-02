@@ -1,7 +1,7 @@
 package dev.danielbodi.thesis.subscription.activation;
 
 import dev.danielbodi.thesis.idempotency.annotation.Idempotent;
-import dev.danielbodi.thesis.subscription.activation.service.SubscriptionActivationService;
+import dev.danielbodi.thesis.subscription.activation.service.FailSubscriptionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -15,13 +15,13 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class PaymentFailedEventListener {
 
-    private final SubscriptionActivationService subscriptionActivationService;
+    private final FailSubscriptionService failSubscriptionService;
 
-    @KafkaListener(topics = "outbox.event.payment_failed")
     @Idempotent
+    @KafkaListener(topics = "outbox.event.payment_failed")
     public void on(PaymentFailedEvent event) {
         log.info("Received payment failure: reference=[{}]", event.reference());
 
-        subscriptionActivationService.fail(event.reference());
+        failSubscriptionService.fail(event.reference());
     }
 }

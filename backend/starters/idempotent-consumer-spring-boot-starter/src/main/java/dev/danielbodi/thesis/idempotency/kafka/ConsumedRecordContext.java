@@ -45,7 +45,7 @@ public final class ConsumedRecordContext {
         if (captured == null) {
             throw new IllegalStateException(
                     "No consumer record in context: @Idempotent method was not invoked by a Kafka listener container "
-                    + "with EventIdRecordInterceptor registered");
+                    + "with ConsumedRecordInterceptor registered");
         }
         return captured;
     }

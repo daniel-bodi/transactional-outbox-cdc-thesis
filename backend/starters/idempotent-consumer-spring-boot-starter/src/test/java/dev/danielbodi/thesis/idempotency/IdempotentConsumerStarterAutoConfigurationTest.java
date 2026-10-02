@@ -1,7 +1,7 @@
 package dev.danielbodi.thesis.idempotency;
 
 import dev.danielbodi.thesis.idempotency.aspect.IdempotencyAspect;
-import dev.danielbodi.thesis.idempotency.kafka.EventIdRecordInterceptor;
+import dev.danielbodi.thesis.idempotency.kafka.ConsumedRecordInterceptor;
 import dev.danielbodi.thesis.idempotency.persistence.ProcessedEventsSchemaInitializer;
 import dev.danielbodi.thesis.idempotency.persistence.ProcessedEventRepository;
 import dev.danielbodi.thesis.idempotency.validation.IdempotentContractValidator;
@@ -34,24 +34,24 @@ class IdempotentConsumerStarterAutoConfigurationTest {
         contextRunner.run(context -> assertThat(context)
                 .hasSingleBean(ProcessedEventRepository.class)
                 .hasSingleBean(IdempotencyAspect.class)
-                .hasSingleBean(EventIdRecordInterceptor.class)
+                .hasSingleBean(ConsumedRecordInterceptor.class)
                 .hasSingleBean(IdempotentContractValidator.class));
     }
 
     @Test
     @SuppressWarnings("unchecked")
-    void autoConfigurationNotRegistersWhenApplicationDefinesItsOwnRecordInterceptor() {
+    void autoConfigurationBacksOffWhenApplicationDefinesItsOwnRecordInterceptor() {
         final RecordInterceptor<Object, Object> applicationBean = mock(RecordInterceptor.class);
 
         contextRunner
                 .withBean("applicationInterceptor", RecordInterceptor.class, () -> applicationBean)
                 .run(context -> assertThat(context)
-                        .doesNotHaveBean(EventIdRecordInterceptor.class)
+                        .doesNotHaveBean(ConsumedRecordInterceptor.class)
                         .hasSingleBean(RecordInterceptor.class));
     }
 
     @Test
-    void autoConfigurationNotRegistersWhenApplicationDefinesItsOwnRepository() {
+    void autoConfigurationBacksOffWhenApplicationDefinesItsOwnRepository() {
         final ProcessedEventRepository applicationBean = mock(ProcessedEventRepository.class);
 
         contextRunner
