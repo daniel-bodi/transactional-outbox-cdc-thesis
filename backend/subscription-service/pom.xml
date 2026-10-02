@@ -52,7 +52,7 @@
         </dependency>
         <dependency>
             <groupId>dev.danielbodi.thesis</groupId>
-            <artifactId>inbox-postgres-spring-boot-starter</artifactId>
+            <artifactId>idempotent-consumer-spring-boot-starter</artifactId>
         </dependency>
         <dependency>
             <groupId>me.paulschwarz</groupId>

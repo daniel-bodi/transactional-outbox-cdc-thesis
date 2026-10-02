@@ -1,6 +1,6 @@
 package dev.danielbodi.thesis.payment.charge;
 
-import dev.danielbodi.thesis.inbox.annotation.Idempotent;
+import dev.danielbodi.thesis.idempotency.annotation.Idempotent;
 import dev.danielbodi.thesis.payment.charge.service.ChargePaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

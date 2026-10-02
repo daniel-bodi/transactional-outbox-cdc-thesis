@@ -22,7 +22,7 @@
     </properties>
 
     <modules>
-        <module>inbox-postgres-spring-boot-starter</module>
+        <module>idempotent-consumer-spring-boot-starter</module>
         <module>outbox-postgres-spring-boot-starter</module>
         <module>payment-service</module>
         <module>psp-mock-service</module>
@@ -38,7 +38,7 @@
             </dependency>
             <dependency>
                 <groupId>dev.danielbodi.thesis</groupId>
-                <artifactId>inbox-postgres-spring-boot-starter</artifactId>
+                <artifactId>idempotent-consumer-spring-boot-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

@@ -1,6 +1,6 @@
 package dev.danielbodi.thesis.subscription.activation;
 
-import dev.danielbodi.thesis.inbox.annotation.Idempotent;
+import dev.danielbodi.thesis.idempotency.annotation.Idempotent;
 import dev.danielbodi.thesis.subscription.activation.service.SubscriptionActivationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

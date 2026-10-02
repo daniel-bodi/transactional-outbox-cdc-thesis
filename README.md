@@ -36,16 +36,16 @@ which types of failures the pattern effectively mitigates, the associated trade-
 
 ```
 transactional-outbox-cdc-thesis/
-├── backend/                                    Maven multi-module Java project
-│   ├── outbox-postgres-spring-boot-starter/    Reusable outbox producer library
-│   ├── inbox-postgres-spring-boot-starter/     Reusable idempotent consumer library
-│   ├── subscription-service/                   Reference producer service
-│   ├── payment-service/                        Reference consumer service
-│   └── psp-mock-service/                       Payment service provider mock with a durable charge log
+├── backend/                                      Maven multi-module Java project
+│   ├── outbox-postgres-spring-boot-starter/      Reusable outbox producer library
+│   ├── idempotent-consumer-spring-boot-starter/  Reusable idempotent consumer library (Spring Kafka, PostgreSQL)
+│   ├── subscription-service/                     Reference producer service
+│   ├── payment-service/                          Reference consumer service
+│   └── psp-mock-service/                         Payment service provider mock with a durable charge log
 ├── infrastructure/
-│   └── debezium/                               Connector definitions and registration script
-├── docker-compose.yml                          PostgreSQL databases, Kafka, Kafka Connect, Kafbat UI
-└── .env.example                                Environment variable template (copy to .env)
+│   └── debezium/                                 Connector definitions and registration script
+├── docker-compose.yml                            PostgreSQL databases, Kafka, Kafka Connect, Kafbat UI
+└── .env.example                                  Environment variable template (copy to .env)
 ```
 
 ## Prerequisites
