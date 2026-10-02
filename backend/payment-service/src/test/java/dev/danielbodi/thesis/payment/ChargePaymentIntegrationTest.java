@@ -36,7 +36,8 @@ import static org.mockito.Mockito.when;
 /**
  * @author danielbodi
  */
-@SpringBootTest
+// PspClient is mocked, the base URL is only needed to build the RestClient bean
+@SpringBootTest(properties = "psp.base-url=http://psp-mock.invalid")
 class ChargePaymentIntegrationTest {
 
     private static final String TOPIC = "outbox.event.payment_requested";
