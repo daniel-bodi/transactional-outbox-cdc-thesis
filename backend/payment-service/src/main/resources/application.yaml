@@ -32,6 +32,14 @@ spring:
     listener:
       observation-enabled: true
 
+  http:
+    clients:
+      connect-timeout: 2s
+      read-timeout: 5s
+
+psp:
+  base-url: http://localhost:${PSP_MOCK_PORT}
+
 logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level [traceId:%X{traceId} spanId:%X{spanId}] %logger{36} - %msg%n"
