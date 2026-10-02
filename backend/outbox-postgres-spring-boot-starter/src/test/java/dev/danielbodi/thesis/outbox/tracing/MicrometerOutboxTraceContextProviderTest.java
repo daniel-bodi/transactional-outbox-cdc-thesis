@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
-import static dev.danielbodi.thesis.outbox.tracing.MicrometerOutboxTraceContextProvider.B3_HEADER;
 import static dev.danielbodi.thesis.outbox.tracing.MicrometerOutboxTraceContextProvider.W3C_TRACEPARENT_HEADER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -37,26 +36,16 @@ class MicrometerOutboxTraceContextProviderTest {
     void traceContextProviderReturnsWhateverThePropagatorPutsUnderTheTraceparentKey() {
         givenTheCurrentSpanContext();
 
-        final String traceId = "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01";
-        givenThePropagatorInjectsHeaders(W3C_TRACEPARENT_HEADER, traceId);
+        final String traceContext = "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01";
+        givenThePropagatorInjectsHeaders(W3C_TRACEPARENT_HEADER, traceContext);
 
-        assertThat(provider.currentTraceContext()).isEqualTo(traceId);
+        assertThat(provider.currentTraceContext()).isEqualTo(traceContext);
     }
 
     @Test
-    void traceContextProviderFallsBackToB3WhenPropagatorEmitsB3HeadersInsteadOfTraceparent() {
+    void traceContextProviderReturnsNullWhenPropagatorEmitsB3InsteadOfTraceparent() {
         givenTheCurrentSpanContext();
-
-        final String traceId = "0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-1";
-        givenThePropagatorInjectsHeaders(B3_HEADER, traceId);
-
-        assertThat(provider.currentTraceContext()).isEqualTo(traceId);
-    }
-
-    @Test
-    void traceContextProviderReturnsNullWhenPropagatorEmitsCustomHeader() {
-        givenTheCurrentSpanContext();
-        givenThePropagatorInjectsHeaders("x-custom-trace", "irrelevant");
+        givenThePropagatorInjectsHeaders("b3", "0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-1");
 
         assertThat(provider.currentTraceContext()).isNull();
     }

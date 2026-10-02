@@ -18,7 +18,6 @@ import java.util.Map;
 public class MicrometerOutboxTraceContextProvider implements OutboxTraceContextProvider {
 
     static final String W3C_TRACEPARENT_HEADER = "traceparent";
-    static final String B3_HEADER = "b3";
 
     private final Tracer tracer;
     private final Propagator propagator;
@@ -36,12 +35,11 @@ public class MicrometerOutboxTraceContextProvider implements OutboxTraceContextP
             return null;
         }
 
-        // propagator puts the current span's trace context into the carrier map,
-        // so we can return the value if it's either w3c or b3
+        // propagator puts the current span's trace context into the carrier map; only W3C is supported,
+        // because the Debezium connectors publish the value under the traceparent header
         final Map<String, String> carrier = new HashMap<>();
         propagator.inject(current.context(), carrier, Map::put);
 
-        final String traceparent = carrier.get(W3C_TRACEPARENT_HEADER);
-        return traceparent != null ? traceparent : carrier.get(B3_HEADER);
+        return carrier.get(W3C_TRACEPARENT_HEADER);
     }
 }

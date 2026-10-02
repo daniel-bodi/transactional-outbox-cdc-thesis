@@ -10,7 +10,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 public class OutboxRepository {
 
     private static final String INSERT = """
-            INSERT INTO outbox (id, trace_id, aggregate_id, aggregate_type, type, payload)
+            INSERT INTO outbox (id, trace_context, aggregate_id, aggregate_type, type, payload)
             VALUES (?, ?, ?, ?, ?, ?::jsonb)
             """;
 
@@ -19,7 +19,7 @@ public class OutboxRepository {
     public void save(Outbox outbox) {
         jdbcTemplate.update(INSERT,
                 outbox.id(),
-                outbox.traceId(),
+                outbox.traceContext(),
                 outbox.aggregateId(),
                 outbox.aggregateType(),
                 outbox.type(),

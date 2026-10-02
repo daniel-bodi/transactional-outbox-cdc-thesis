@@ -7,7 +7,7 @@ import java.util.UUID;
  */
 public record Outbox(
         UUID id,
-        String traceId,
+        String traceContext,
         String aggregateId,
         String aggregateType,
         String type,

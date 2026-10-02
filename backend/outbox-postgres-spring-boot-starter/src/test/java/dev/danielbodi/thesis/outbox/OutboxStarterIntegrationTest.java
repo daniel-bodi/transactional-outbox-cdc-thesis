@@ -101,7 +101,7 @@ class OutboxStarterIntegrationTest {
             softly.assertThat(payloadKeys).containsExactly("amount");
 
             // no active span, so no trace context is recorded.
-            assertThat(singleStringColumn("trace_id")).isNull();
+            assertThat(singleStringColumn("trace_context")).isNull();
         });
     }
 
@@ -151,7 +151,7 @@ class OutboxStarterIntegrationTest {
             span.end();
         }
 
-        assertThat(singleStringColumn("trace_id")).matches("^00-[0-9a-f]{32}-[0-9a-f]{16}-(00|01)$");
+        assertThat(singleStringColumn("trace_context")).matches("^00-[0-9a-f]{32}-[0-9a-f]{16}-(00|01)$");
     }
 
     private Integer outboxRowCount() {

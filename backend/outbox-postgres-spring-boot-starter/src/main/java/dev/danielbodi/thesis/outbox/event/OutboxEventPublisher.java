@@ -24,6 +24,6 @@ public class OutboxEventPublisher {
 
         outboxRepository.save(outbox);
         log.debug("Writing outbox event [id={}, type={}, aggregateType={}, aggregateId={}, traceContext={}]",
-                outbox.id(), outbox.type(), outbox.aggregateType(), outbox.aggregateId(), outbox.traceId());
+                outbox.id(), outbox.type(), outbox.aggregateType(), outbox.aggregateId(), outbox.traceContext());
     }
 }

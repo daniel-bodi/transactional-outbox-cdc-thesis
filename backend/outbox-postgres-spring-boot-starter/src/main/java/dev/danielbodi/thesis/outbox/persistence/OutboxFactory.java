@@ -19,8 +19,8 @@ public class OutboxFactory {
     public Outbox from(OutboxEvent event) {
         final UUID id = UUID.randomUUID();
         final String payload = objectMapper.writeValueAsString(event);
-        final String traceId = traceContextProvider.currentTraceContext();
+        final String traceContext = traceContextProvider.currentTraceContext();
 
-        return new Outbox(id, traceId, event.getAggregateId(), event.getAggregateType(), event.getEventType(), payload);
+        return new Outbox(id, traceContext, event.getAggregateId(), event.getAggregateType(), event.getEventType(), payload);
     }
 }
