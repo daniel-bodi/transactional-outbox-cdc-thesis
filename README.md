@@ -65,17 +65,18 @@ cp .env.example .env
 # 2. Start the infrastructure stack (PostgreSQL databases, Kafka, Kafka Connect, Kafbat UI)
 docker compose up -d
 
-# 3. Start the backend services (each in its own terminal).
-#    Their Flyway migrations create the tables Debezium relies on,
-#    so this must happen before the connector is registered.
+# 3. Start the backend services, each in its own terminal from the backend/ directory.
+#    On startup Flyway creates the business tables, and the outbox and idempotent consumer
+#    starters create the outbox and processed_events tables.
 cd backend
 ./mvnw -pl subscription-service spring-boot:run
 ./mvnw -pl payment-service spring-boot:run
 ./mvnw -pl psp-mock-service spring-boot:run
 
-# 4. Register the Debezium outbox connector.
-#    Requires the services above to have completed their Flyway migrations;
-#    otherwise the connector fails because the observed tables do not yet exist.
+# 4. Register the Debezium outbox connectors, from the repository root.
+#    The connectors observe the outbox tables, so the services above must have started at least once
+#    and the databases must be running; otherwise registration fails with "The connection attempt failed"
+#    or a missing table error.
 ./infrastructure/debezium/register-connectors.sh
 ```
 
