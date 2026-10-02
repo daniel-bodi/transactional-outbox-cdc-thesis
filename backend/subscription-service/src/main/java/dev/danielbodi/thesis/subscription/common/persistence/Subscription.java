@@ -48,4 +48,20 @@ public class Subscription {
         this.plan = plan;
         this.status = SubscriptionStatus.PENDING;
     }
+
+    public void activate() {
+        requirePending();
+        this.status = SubscriptionStatus.ACTIVE;
+    }
+
+    public void fail() {
+        requirePending();
+        this.status = SubscriptionStatus.FAILED;
+    }
+
+    private void requirePending() {
+        if (status != SubscriptionStatus.PENDING) {
+            throw new IllegalStateException("Subscription [" + id + "] is not pending but [" + status + "]");
+        }
+    }
 }

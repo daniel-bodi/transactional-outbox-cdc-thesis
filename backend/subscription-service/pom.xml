@@ -43,8 +43,16 @@
             <artifactId>spring-boot-starter-flyway</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-kafka</artifactId>
+        </dependency>
+        <dependency>
             <groupId>dev.danielbodi.thesis</groupId>
             <artifactId>outbox-postgres-spring-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.danielbodi.thesis</groupId>
+            <artifactId>inbox-postgres-spring-boot-starter</artifactId>
         </dependency>
         <dependency>
             <groupId>me.paulschwarz</groupId>
@@ -62,6 +70,26 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-kafka</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
