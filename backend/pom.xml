@@ -22,11 +22,11 @@
     </properties>
 
     <modules>
-        <module>idempotent-consumer-spring-boot-starter</module>
+        <module>starters/idempotent-consumer-spring-boot-starter</module>
+        <module>starters/transactional-outbox-spring-boot-starter</module>
         <module>payment-service</module>
         <module>psp-mock-service</module>
         <module>subscription-service</module>
-        <module>transactional-outbox-spring-boot-starter</module>
     </modules>
 
     <dependencyManagement>

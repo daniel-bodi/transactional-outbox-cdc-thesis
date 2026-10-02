@@ -7,7 +7,7 @@
         <groupId>dev.danielbodi.thesis</groupId>
         <artifactId>transactional-outbox-cdc-backend-parent</artifactId>
         <version>1.0.0-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <artifactId>idempotent-consumer-spring-boot-starter</artifactId>
