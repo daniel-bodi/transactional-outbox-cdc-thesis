@@ -17,6 +17,7 @@ register() {
 }
 
 register "subscription-outbox-connector" "$SCRIPT_DIR/subscription-outbox-connector.json"
+register "payment-outbox-connector" "$SCRIPT_DIR/payment-outbox-connector.json"
 
 echo
 echo "Registered connectors:"

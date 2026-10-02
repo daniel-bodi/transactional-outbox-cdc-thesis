@@ -1,0 +1,31 @@
+{
+  "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+  "tasks.max": "1",
+
+  "database.hostname": "payment-db",
+  "database.port": "5432",
+  "database.user": "${env:PAYMENT_DB_USER}",
+  "database.password": "${env:PAYMENT_DB_PASSWORD}",
+  "database.dbname": "${env:PAYMENT_DB_NAME}",
+
+  "plugin.name": "pgoutput",
+  "publication.autocreate.mode": "filtered",
+  "publication.name": "payment_outbox_publication",
+  "slot.name": "payment_outbox_slot",
+
+  "table.include.list": "public.outbox",
+
+  "topic.prefix": "payment",
+
+  "transforms": "outbox",
+  "transforms.outbox.type": "io.debezium.transforms.outbox.EventRouter",
+  "transforms.outbox.route.by.field": "type",
+  "transforms.outbox.route.topic.replacement": "outbox.event.${routedByValue}",
+  "transforms.outbox.table.field.event.key": "aggregate_id",
+  "transforms.outbox.table.expand.json.payload": "true",
+  "transforms.outbox.table.fields.additional.placement": "trace_id:header:traceparent",
+
+  "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+  "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+  "value.converter.schemas.enable": "false"
+}
