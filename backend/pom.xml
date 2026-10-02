@@ -23,17 +23,17 @@
 
     <modules>
         <module>idempotent-consumer-spring-boot-starter</module>
-        <module>outbox-postgres-spring-boot-starter</module>
         <module>payment-service</module>
         <module>psp-mock-service</module>
         <module>subscription-service</module>
+        <module>transactional-outbox-spring-boot-starter</module>
     </modules>
 
     <dependencyManagement>
         <dependencies>
             <dependency>
                 <groupId>dev.danielbodi.thesis</groupId>
-                <artifactId>outbox-postgres-spring-boot-starter</artifactId>
+                <artifactId>transactional-outbox-spring-boot-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

@@ -10,7 +10,8 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>outbox-postgres-spring-boot-starter</artifactId>
+    <artifactId>transactional-outbox-spring-boot-starter</artifactId>
+    <description>Transactional outbox for Spring applications backed by PostgreSQL</description>
 
     <dependencies>
         <dependency>

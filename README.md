@@ -37,7 +37,7 @@ which types of failures the pattern effectively mitigates, the associated trade-
 ```
 transactional-outbox-cdc-thesis/
 ├── backend/                                      Maven multi-module Java project
-│   ├── outbox-postgres-spring-boot-starter/      Reusable outbox producer library
+│   ├── transactional-outbox-spring-boot-starter/ Reusable outbox producer library (PostgreSQL)
 │   ├── idempotent-consumer-spring-boot-starter/  Reusable idempotent consumer library (Spring Kafka, PostgreSQL)
 │   ├── subscription-service/                     Reference producer service
 │   ├── payment-service/                          Reference consumer service
