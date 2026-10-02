@@ -122,7 +122,7 @@ services:
       retries: 30
 
   kafka-ui:
-    image: ghcr.io/kafbat/kafka-ui:latest
+    image: ghcr.io/kafbat/kafka-ui:v1.5.0
     container_name: kafka-ui
     depends_on:
       kafka:
