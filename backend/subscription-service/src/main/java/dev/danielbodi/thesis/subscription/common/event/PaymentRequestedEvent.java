@@ -7,12 +7,6 @@ import lombok.RequiredArgsConstructor;
 import java.math.BigDecimal;
 
 /**
- * Raised when a subscription has been created and payment for it must be collected.
- * <p>
- * The payload names the target of the charge as {@code reference} rather than a
- * subscription identifier, so that the payment side does not learn about the
- * concept of a subscription — that belongs to another bounded context.
- *
  * @author danielbodi
  */
 @Getter

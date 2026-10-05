@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.UuidGenerator;
@@ -20,7 +21,7 @@ import java.util.UUID;
  * @author danielbodi
  */
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "subscription")
 public class Subscription {
@@ -43,25 +44,35 @@ public class Subscription {
     @Column(name = "created_at", insertable = false, updatable = false)
     private OffsetDateTime createdAt;
 
-    public Subscription(UUID customerId, Plan plan) {
+    @Column(name = "completed_at")
+    private OffsetDateTime completedAt;
+
+    private Subscription(UUID customerId, Plan plan) {
         this.customerId = customerId;
         this.plan = plan;
         this.status = SubscriptionStatus.PENDING;
     }
 
+    /**
+     * A new subscription is not usable until its payment settles, so it always starts as pending.
+     */
+    public static Subscription pending(UUID customerId, Plan plan) {
+        return new Subscription(customerId, plan);
+    }
+
     public void activate() {
-        requirePending();
-        this.status = SubscriptionStatus.ACTIVE;
+        complete(SubscriptionStatus.ACTIVE);
     }
 
     public void fail() {
-        requirePending();
-        this.status = SubscriptionStatus.FAILED;
+        complete(SubscriptionStatus.FAILED);
     }
 
-    private void requirePending() {
+    private void complete(SubscriptionStatus outcome) {
         if (status != SubscriptionStatus.PENDING) {
             throw new IllegalStateException("Subscription [" + id + "] is not pending but [" + status + "]");
         }
+        this.status = outcome;
+        this.completedAt = OffsetDateTime.now();
     }
 }

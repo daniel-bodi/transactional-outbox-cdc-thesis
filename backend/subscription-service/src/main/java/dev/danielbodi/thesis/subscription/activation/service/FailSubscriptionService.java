@@ -1,7 +1,7 @@
 package dev.danielbodi.thesis.subscription.activation.service;
 
+import dev.danielbodi.thesis.subscription.common.persistence.PaymentRequestRepository;
 import dev.danielbodi.thesis.subscription.common.persistence.Subscription;
-import dev.danielbodi.thesis.subscription.common.persistence.SubscriptionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,14 +17,15 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class FailSubscriptionService {
 
-    private final SubscriptionRepository subscriptionRepository;
+    private final PaymentRequestRepository paymentRequestRepository;
 
     @Transactional
-    public void fail(UUID subscriptionId) {
-        final Subscription subscription = subscriptionRepository.findById(subscriptionId)
-                .orElseThrow(() -> new IllegalArgumentException("No such subscription: " + subscriptionId));
+    public void fail(UUID reference) {
+        final Subscription subscription = paymentRequestRepository.findById(reference)
+                .orElseThrow(() -> new IllegalArgumentException("No such payment request: " + reference))
+                .getSubscription();
         subscription.fail();
 
-        log.info("Subscription [{}] failed due to declined payment", subscriptionId);
+        log.info("Subscription [{}] failed due to declined payment request [{}]", subscription.getId(), reference);
     }
 }

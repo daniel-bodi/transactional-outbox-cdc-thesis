@@ -13,8 +13,11 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
@@ -29,6 +32,7 @@ class SubscriptionActivationIntegrationTest {
     private static final String SUCCEEDED_TOPIC = "outbox.event.payment_succeeded";
     private static final String FAILED_TOPIC = "outbox.event.payment_failed";
     private static final UUID BASIC_PLAN_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
+    private static final BigDecimal BASIC_PLAN_AMOUNT = new BigDecimal("999");
 
     // Containers are Spring beans, not JUnit @Container fields, so the Kafka clients are closed before the broker stops
     @TestConfiguration
@@ -57,23 +61,50 @@ class SubscriptionActivationIntegrationTest {
     private KafkaTemplate<String, String> kafkaTemplate;
 
     @Test
+    void creationRecordsPaymentRequestAndPublishesItsReference() {
+        final UUID subscriptionId = createPendingSubscription();
+        final UUID reference = referenceOf(subscriptionId);
+
+        final Map<String, Object> outbox = jdbcClient.sql("""
+                        SELECT aggregate_id, type, payload ->> 'reference' AS reference, (payload ->> 'amount')::numeric AS amount
+                        FROM outbox WHERE aggregate_id = ?""")
+                .param(subscriptionId.toString())
+                .query()
+                .singleRow();
+
+        assertSoftly(softly -> {
+            softly.assertThat(reference).isNotEqualTo(subscriptionId);
+            softly.assertThat(completedAt(subscriptionId)).isNull();
+            softly.assertThat(outbox.get("type")).isEqualTo("payment_requested");
+            softly.assertThat(outbox.get("reference")).isEqualTo(reference.toString());
+            softly.assertThat((BigDecimal) outbox.get("amount")).isEqualByComparingTo(BASIC_PLAN_AMOUNT);
+        });
+    }
+
+    @Test
     void succeededPaymentActivatesSubscription() {
         final UUID subscriptionId = createPendingSubscription();
 
-        send(SUCCEEDED_TOPIC, UUID.randomUUID(), subscriptionId);
+        send(SUCCEEDED_TOPIC, UUID.randomUUID(), referenceOf(subscriptionId));
         awaitConsumed(SUCCEEDED_TOPIC);
 
-        assertSoftly(softly -> softly.assertThat(status(subscriptionId)).isEqualTo("ACTIVE"));
+        assertSoftly(softly -> {
+            softly.assertThat(status(subscriptionId)).isEqualTo("ACTIVE");
+            softly.assertThat(completedAt(subscriptionId)).isAfterOrEqualTo(createdAt(subscriptionId));
+        });
     }
 
     @Test
     void failedPaymentFailsSubscription() {
         final UUID subscriptionId = createPendingSubscription();
 
-        send(FAILED_TOPIC, UUID.randomUUID(), subscriptionId);
+        send(FAILED_TOPIC, UUID.randomUUID(), referenceOf(subscriptionId));
         awaitConsumed(FAILED_TOPIC);
 
-        assertSoftly(softly -> softly.assertThat(status(subscriptionId)).isEqualTo("FAILED"));
+        assertSoftly(softly -> {
+            softly.assertThat(status(subscriptionId)).isEqualTo("FAILED");
+            softly.assertThat(completedAt(subscriptionId)).isAfterOrEqualTo(createdAt(subscriptionId));
+        });
     }
 
     @Test
@@ -81,8 +112,10 @@ class SubscriptionActivationIntegrationTest {
         final UUID eventId = UUID.randomUUID();
         final UUID subscriptionId = createPendingSubscription();
 
-        send(SUCCEEDED_TOPIC, eventId, subscriptionId);
-        send(SUCCEEDED_TOPIC, eventId, subscriptionId);
+        final UUID reference = referenceOf(subscriptionId);
+
+        send(SUCCEEDED_TOPIC, eventId, reference);
+        send(SUCCEEDED_TOPIC, eventId, reference);
         awaitConsumed(SUCCEEDED_TOPIC);
 
         assertSoftly(softly -> {
@@ -96,9 +129,11 @@ class SubscriptionActivationIntegrationTest {
         final UUID failedEventId = UUID.randomUUID();
         final UUID subscriptionId = createPendingSubscription();
 
-        send(SUCCEEDED_TOPIC, UUID.randomUUID(), subscriptionId);
+        final UUID reference = referenceOf(subscriptionId);
+
+        send(SUCCEEDED_TOPIC, UUID.randomUUID(), reference);
         awaitConsumed(SUCCEEDED_TOPIC);
-        send(FAILED_TOPIC, failedEventId, subscriptionId);
+        send(FAILED_TOPIC, failedEventId, reference);
         awaitConsumed(FAILED_TOPIC);
 
         // the rejected transition is rolled back together with its processed_events row
@@ -123,8 +158,15 @@ class SubscriptionActivationIntegrationTest {
     // single-partition topic: once the barrier subscription is settled, every earlier record (incl. retries) is done
     private void awaitConsumed(String topic) {
         final UUID barrier = createPendingSubscription();
-        send(topic, UUID.randomUUID(), barrier);
+        send(topic, UUID.randomUUID(), referenceOf(barrier));
         await().atMost(Duration.ofSeconds(30)).until(() -> !"PENDING".equals(status(barrier)));
+    }
+
+    private UUID referenceOf(UUID subscriptionId) {
+        return jdbcClient.sql("SELECT id FROM payment_request WHERE subscription_id = ?")
+                .param(subscriptionId)
+                .query(UUID.class)
+                .single();
     }
 
     private String status(UUID subscriptionId) {
@@ -132,6 +174,22 @@ class SubscriptionActivationIntegrationTest {
                 .param(subscriptionId)
                 .query(String.class)
                 .single();
+    }
+
+    private OffsetDateTime createdAt(UUID subscriptionId) {
+        return timestamp("created_at", subscriptionId);
+    }
+
+    private OffsetDateTime completedAt(UUID subscriptionId) {
+        return timestamp("completed_at", subscriptionId);
+    }
+
+    private OffsetDateTime timestamp(String column, UUID subscriptionId) {
+        return jdbcClient.sql("SELECT " + column + " FROM subscription WHERE id = ?")
+                .param(subscriptionId)
+                .query(OffsetDateTime.class)
+                .optional()
+                .orElse(null);
     }
 
     private boolean processedEventExists(UUID eventId) {
