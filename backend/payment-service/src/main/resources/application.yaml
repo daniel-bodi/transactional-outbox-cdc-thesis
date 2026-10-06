@@ -24,7 +24,7 @@ spring:
     locations: classpath:db/migration
 
   kafka:
-    bootstrap-servers: localhost:${KAFKA_PORT}
+    bootstrap-servers: ${KAFKA_HOST}:${KAFKA_PORT}
     consumer:
       group-id: payment-service
       auto-offset-reset: earliest
@@ -38,7 +38,7 @@ spring:
       read-timeout: 5s
 
 psp:
-  base-url: http://localhost:${PSP_MOCK_PORT}
+  base-url: http://${PSP_MOCK_HOST}:${PSP_MOCK_PORT}
 
 logging:
   pattern:

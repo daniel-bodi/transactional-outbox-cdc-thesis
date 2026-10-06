@@ -1,6 +1,9 @@
 springdotenv:
   directory: ../../
 
+server:
+  port: ${SUBSCRIPTION_SERVICE_PORT}
+
 spring:
   application:
     name: subscription-service
@@ -24,7 +27,7 @@ spring:
     locations: classpath:db/migration
 
   kafka:
-    bootstrap-servers: localhost:${KAFKA_PORT}
+    bootstrap-servers: ${KAFKA_HOST}:${KAFKA_PORT}
     consumer:
       group-id: subscription-service
       auto-offset-reset: earliest
