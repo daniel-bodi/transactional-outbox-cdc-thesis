@@ -42,10 +42,12 @@ transactional-outbox-cdc-thesis/
 │   │   └── idempotent-consumer-spring-boot-starter/   Idempotent consumer (Spring Kafka, PostgreSQL)
 │   ├── subscription-service/                          Reference producer service
 │   ├── payment-service/                               Reference consumer service
-│   └── psp-mock-service/                              Payment service provider mock with a durable charge log
+│   ├── psp-mock-service/                              Payment service provider mock with a durable charge log
+│   └── Dockerfile                                     Shared service image, module selected by build argument
 ├── infrastructure/
-│   └── debezium/                                      Connector definitions and registration script
-├── docker-compose.yml                                 PostgreSQL databases, Kafka, Kafka Connect, Kafbat UI
+│   ├── debezium/                                      Connector definitions and registration script
+│   └── kafka/                                         Explicit topic definitions
+├── docker-compose.yml                                 Databases, Kafka, Kafka Connect, Kafbat UI and the services
 └── .env.example                                       Environment variable template (copy to .env)
 ```
 
@@ -63,22 +65,15 @@ The Maven wrapper (`mvnw`) is bundled under `backend/`; a separate Maven install
 # 1. Create the local environment file
 cp .env.example .env
 
-# 2. Start the infrastructure stack (PostgreSQL databases, Kafka, Kafka Connect, Kafbat UI)
-docker compose up -d
+# 2. Build and start the stack
+docker compose up -d --build
 
-# 3. Start the backend services, each in its own terminal from the backend/ directory.
-#    On startup Flyway creates the business tables, and the outbox and idempotent consumer
-#    starters create the outbox and processed_events tables.
-cd backend
-./mvnw -pl subscription-service spring-boot:run
-./mvnw -pl payment-service spring-boot:run
-./mvnw -pl psp-mock-service spring-boot:run
-
-# 4. Register the Debezium outbox connectors, from the repository root.
-#    The connectors observe the outbox tables, so the services above must have started at least once
-#    and the databases must be running; otherwise registration fails with "The connection attempt failed"
-#    or a missing table error.
+# 3. Register the Debezium outbox connectors
 ./infrastructure/debezium/register-connectors.sh
 ```
 
-Once started, the subscription service listens on `http://localhost:8080`, the PSP mock on `http://localhost:8082` and the Kafbat UI on `http://localhost:8081`.
+Once started, the subscription service listens on `http://localhost:8080`, the PSP mock on `http://localhost:8082`,
+and the Kafbat UI on `http://localhost:8081`.
+
+To run a service from the IDE or with `spring-boot:run` instead, stop its container
+(e.g. `docker compose stop payment-service`); the values in `.env` address the stack from the host.

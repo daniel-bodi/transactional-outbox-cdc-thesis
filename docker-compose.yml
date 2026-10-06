@@ -77,6 +77,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
       CLUSTER_ID: 4L6g3nShT-eMCtK--X86sw
     ports:
       - "${KAFKA_PORT}:29092"
@@ -87,6 +88,17 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
+
+  kafka-topics:
+    image: apache/kafka:4.3.1
+    container_name: kafka-topics
+    depends_on:
+      kafka:
+        condition: service_healthy
+    volumes:
+      - ./infrastructure/kafka/create-topics.sh:/create-topics.sh:ro
+    entrypoint: [ "/create-topics.sh" ]
+    restart: "no"
 
   kafka-connect:
     image: quay.io/debezium/connect:3.6.3.Final
@@ -117,6 +129,88 @@ services:
       - "${KAFKA_CONNECT_PORT}:8083"
     healthcheck:
       test: [ "CMD-SHELL", "curl -sf http://localhost:8083/connectors" ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  subscription-service:
+    build:
+      context: ./backend
+      args:
+        MODULE: subscription-service
+    image: thesis/subscription-service
+    container_name: subscription-service
+    depends_on:
+      subscription-db:
+        condition: service_healthy
+      kafka-topics:
+        condition: service_completed_successfully
+    environment:
+      SUBSCRIPTION_SERVICE_PORT: 8080
+      SUBSCRIPTION_DB_HOST: subscription-db
+      SUBSCRIPTION_DB_PORT: 5432
+      SUBSCRIPTION_DB_NAME: ${SUBSCRIPTION_DB_NAME}
+      SUBSCRIPTION_DB_USER: ${SUBSCRIPTION_DB_USER}
+      SUBSCRIPTION_DB_PASSWORD: ${SUBSCRIPTION_DB_PASSWORD}
+      KAFKA_HOST: kafka
+      KAFKA_PORT: 9092
+    ports:
+      - "${SUBSCRIPTION_SERVICE_PORT}:8080"
+    restart: on-failure
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -sf http://localhost:8080/actuator/health" ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  payment-service:
+    build:
+      context: ./backend
+      args:
+        MODULE: payment-service
+    image: thesis/payment-service
+    container_name: payment-service
+    depends_on:
+      payment-db:
+        condition: service_healthy
+      kafka-topics:
+        condition: service_completed_successfully
+      psp-mock-service:
+        condition: service_healthy
+    environment:
+      PAYMENT_DB_HOST: payment-db
+      PAYMENT_DB_PORT: 5432
+      PAYMENT_DB_NAME: ${PAYMENT_DB_NAME}
+      PAYMENT_DB_USER: ${PAYMENT_DB_USER}
+      PAYMENT_DB_PASSWORD: ${PAYMENT_DB_PASSWORD}
+      KAFKA_HOST: kafka
+      KAFKA_PORT: 9092
+      PSP_MOCK_HOST: psp-mock-service
+      PSP_MOCK_PORT: 8080
+    restart: on-failure
+
+  psp-mock-service:
+    build:
+      context: ./backend
+      args:
+        MODULE: psp-mock-service
+    image: thesis/psp-mock-service
+    container_name: psp-mock-service
+    depends_on:
+      psp-db:
+        condition: service_healthy
+    environment:
+      PSP_MOCK_PORT: 8080
+      PSP_DB_HOST: psp-db
+      PSP_DB_PORT: 5432
+      PSP_DB_NAME: ${PSP_DB_NAME}
+      PSP_DB_USER: ${PSP_DB_USER}
+      PSP_DB_PASSWORD: ${PSP_DB_PASSWORD}
+    ports:
+      - "${PSP_MOCK_PORT}:8080"
+    restart: on-failure
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -sf http://localhost:8080/actuator/health" ]
       interval: 5s
       timeout: 5s
       retries: 30
