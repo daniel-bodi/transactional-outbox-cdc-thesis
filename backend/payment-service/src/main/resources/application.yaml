@@ -21,7 +21,7 @@ spring:
 
   flyway:
     enabled: true
-    locations: classpath:db/migration
+    locations: classpath:database/migration
 
   kafka:
     bootstrap-servers: ${KAFKA_HOST}:${KAFKA_PORT}

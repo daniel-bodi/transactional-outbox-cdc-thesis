@@ -24,7 +24,7 @@ spring:
 
   flyway:
     enabled: true
-    locations: classpath:db/migration
+    locations: classpath:database/migration
 
 logging:
   pattern:
