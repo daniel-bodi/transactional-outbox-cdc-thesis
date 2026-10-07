@@ -30,6 +30,12 @@ public class ChargePaymentService {
 
     @Transactional
     public void charge(UUID reference, BigDecimal amount) {
+        // a request already settled under another event id must not reach the provider again
+        if (paymentRepository.existsByReference(reference)) {
+            log.info("Payment for reference [{}] already recorded, charge skipped", reference);
+            return;
+        }
+
         final PspChargeResponse response = pspClient.charge(reference, amount);
 
         final PaymentStatus status = switch (response.status()) {

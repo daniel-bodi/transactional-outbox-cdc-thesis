@@ -119,6 +119,21 @@ class ChargePaymentIntegrationTest {
     }
 
     @Test
+    void requestForAlreadyPaidReferenceIsNotChargedAgain() {
+        final UUID reference = UUID.randomUUID();
+
+        sendPaymentRequested(UUID.randomUUID(), reference);
+        sendPaymentRequested(UUID.randomUUID(), reference);
+        awaitConsumed();
+
+        assertSoftly(softly -> {
+            softly.assertThat(paymentStatus(reference)).contains("SUCCEEDED");
+            softly.assertThat(outboxTypes(reference)).containsExactly("payment_succeeded");
+        });
+        verify(pspClient, times(1)).charge(eq(reference), any());
+    }
+
+    @Test
     void technicalPspFailureIsRetriedAndRecordedOnce() {
         final UUID reference = UUID.randomUUID();
         when(pspClient.charge(eq(reference), any()))

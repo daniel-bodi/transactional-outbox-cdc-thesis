@@ -1,6 +1,7 @@
 package dev.danielbodi.thesis.subscription;
 
 import dev.danielbodi.thesis.subscription.create.service.CreateSubscriptionService;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.postgresql.PostgreSQLContainer;
@@ -17,6 +19,8 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -59,6 +63,9 @@ class SubscriptionActivationIntegrationTest {
 
     @Autowired
     private KafkaTemplate<String, String> kafkaTemplate;
+
+    @Autowired
+    private ConsumerFactory<String, byte[]> consumerFactory;
 
     @Test
     void creationRecordsPaymentRequestAndPublishesItsReference() {
@@ -143,6 +150,17 @@ class SubscriptionActivationIntegrationTest {
         });
     }
 
+    @Test
+    void outcomeForUnknownReferenceIsDeadLetteredWithoutRetries() {
+        final UUID eventId = UUID.randomUUID();
+
+        send(SUCCEEDED_TOPIC, eventId, UUID.randomUUID());
+        // a retried record would hold back the barrier on the single partition far beyond the await timeout
+        awaitConsumed(SUCCEEDED_TOPIC);
+
+        assertSoftly(softly -> softly.assertThat(deadLetteredEventIds(SUCCEEDED_TOPIC + "-dlt")).contains(eventId));
+    }
+
     private UUID createPendingSubscription() {
         return createSubscriptionService.createSubscription(UUID.randomUUID(), BASIC_PLAN_ID);
     }
@@ -190,6 +208,19 @@ class SubscriptionActivationIntegrationTest {
                 .query(OffsetDateTime.class)
                 .optional()
                 .orElse(null);
+    }
+
+    private List<UUID> deadLetteredEventIds(String topic) {
+        try (Consumer<String, byte[]> consumer = consumerFactory.createConsumer("dead-letter-check", null)) {
+            consumer.subscribe(List.of(topic));
+            final List<UUID> eventIds = new ArrayList<>();
+            await().atMost(Duration.ofSeconds(30)).until(() -> {
+                consumer.poll(Duration.ofMillis(500)).forEach(record -> eventIds.add(
+                        UUID.fromString(new String(record.headers().lastHeader("id").value(), StandardCharsets.UTF_8))));
+                return !eventIds.isEmpty();
+            });
+            return eventIds;
+        }
     }
 
     private boolean processedEventExists(UUID eventId) {

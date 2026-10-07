@@ -35,6 +35,13 @@ spring:
     listener:
       observation-enabled: true
 
+consumer:
+  retry:
+    max-retries: 10
+    initial-interval: 1s
+    multiplier: 2.0
+    max-interval: 30s
+
 logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level [traceId:%X{traceId} spanId:%X{spanId}] %logger{36} - %msg%n"

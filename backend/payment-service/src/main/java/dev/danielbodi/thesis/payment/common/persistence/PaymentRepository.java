@@ -8,4 +8,6 @@ import java.util.UUID;
  * @author danielbodi
  */
 public interface PaymentRepository extends JpaRepository<Payment, UUID> {
+
+    boolean existsByReference(UUID reference);
 }

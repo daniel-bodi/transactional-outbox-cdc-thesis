@@ -9,6 +9,10 @@ TOPICS=(
   outbox.event.payment_requested
   outbox.event.payment_succeeded
   outbox.event.payment_failed
+  # dead letter topics of the consumers
+  outbox.event.payment_requested-dlt
+  outbox.event.payment_succeeded-dlt
+  outbox.event.payment_failed-dlt
 )
 
 for topic in "${TOPICS[@]}"; do
