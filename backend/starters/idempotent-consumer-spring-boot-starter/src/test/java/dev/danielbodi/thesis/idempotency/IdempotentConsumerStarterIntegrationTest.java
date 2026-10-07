@@ -101,6 +101,7 @@ class IdempotentConsumerStarterIntegrationTest {
             softly.assertThat(testIdempotentKafkaListener.invocationsFor(payload)).isEqualTo(1);
             softly.assertThat(processedEventExists(MAIN_GROUP, eventId)).isTrue();
             softly.assertThat(businessRowExists(payload)).isTrue();
+            softly.assertThat(duplicateDeliveries(MAIN_GROUP, eventId)).isZero();
         });
     }
 
@@ -119,6 +120,7 @@ class IdempotentConsumerStarterIntegrationTest {
             softly.assertThat(businessRowExists(original)).isTrue();
             softly.assertThat(testIdempotentKafkaListener.invocationsFor(redelivery)).isZero();
             softly.assertThat(businessRowExists(redelivery)).isFalse();
+            softly.assertThat(duplicateDeliveries(MAIN_GROUP, eventId)).isEqualTo(1);
         });
     }
 
@@ -139,6 +141,8 @@ class IdempotentConsumerStarterIntegrationTest {
             softly.assertThat(secondGroupListener.invocationsFor(redelivery)).isZero();
             softly.assertThat(processedEventExists(MAIN_GROUP, eventId)).isTrue();
             softly.assertThat(processedEventExists(SECOND_GROUP, eventId)).isTrue();
+            softly.assertThat(duplicateDeliveries(MAIN_GROUP, eventId)).isEqualTo(1);
+            softly.assertThat(duplicateDeliveries(SECOND_GROUP, eventId)).isEqualTo(1);
         });
     }
 
@@ -155,6 +159,7 @@ class IdempotentConsumerStarterIntegrationTest {
             softly.assertThat(testIdempotentKafkaListener.invocationsFor(payload)).isEqualTo(2);
             softly.assertThat(processedEventExists(MAIN_GROUP, eventId)).isTrue();
             softly.assertThat(businessRowExists(payload)).isTrue();
+            softly.assertThat(duplicateDeliveries(MAIN_GROUP, eventId)).isZero();
         });
     }
 
@@ -205,6 +210,14 @@ class IdempotentConsumerStarterIntegrationTest {
                 .param(consumerGroup)
                 .param(eventId)
                 .query(Boolean.class)
+                .single();
+    }
+
+    private int duplicateDeliveries(String consumerGroup, UUID eventId) {
+        return jdbcClient.sql("SELECT duplicate_deliveries FROM processed_events WHERE consumer_group = ? AND event_id = ?")
+                .param(consumerGroup)
+                .param(eventId)
+                .query(Integer.class)
                 .single();
     }
 

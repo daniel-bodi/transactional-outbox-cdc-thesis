@@ -29,6 +29,7 @@ public class IdempotencyAspect {
         try {
             return transactionTemplate.execute(status -> {
                 if (!repository.insertIfAbsent(consumerGroup, eventId)) {
+                    repository.incrementDuplicateDeliveries(consumerGroup, eventId);
                     log.debug("Duplicate event [{}] for consumer group [{}], skipping", eventId, consumerGroup);
                     return null;
                 }
