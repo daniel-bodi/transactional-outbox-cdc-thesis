@@ -1,5 +1,6 @@
 package dev.danielbodi.thesis.payment.charge.service;
 
+import dev.danielbodi.thesis.fault.FaultInjector;
 import dev.danielbodi.thesis.outbox.event.OutboxEventPublisher;
 import dev.danielbodi.thesis.payment.common.event.PaymentFailedEvent;
 import dev.danielbodi.thesis.payment.common.event.PaymentSucceededEvent;
@@ -27,6 +28,7 @@ public class ChargePaymentService {
     private final PspClient pspClient;
     private final PaymentRepository paymentRepository;
     private final OutboxEventPublisher outboxEventPublisher;
+    private final FaultInjector faultInjector;
 
     @Transactional
     public void charge(UUID reference, BigDecimal amount) {
@@ -37,6 +39,9 @@ public class ChargePaymentService {
         }
 
         final PspChargeResponse response = pspClient.charge(reference, amount);
+
+        // S5b: the provider has charged, nothing is committed yet
+        faultInjector.reach("AFTER_PSP_CALL");
 
         final PaymentStatus status = switch (response.status()) {
             case SUCCEEDED -> PaymentStatus.SUCCEEDED;

@@ -15,12 +15,16 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PspClient {
 
+    // the payment request is the operation the provider must not repeat, so its reference is the key
+    private static final String IDEMPOTENCY_KEY_HEADER = "Idempotency-Key";
+
     private final RestClient pspRestClient;
 
     public PspChargeResponse charge(UUID reference, BigDecimal amount) {
         return pspRestClient.post()
                 .uri("/charges")
                 .contentType(MediaType.APPLICATION_JSON)
+                .header(IDEMPOTENCY_KEY_HEADER, reference.toString())
                 .body(new PspChargeRequest(reference, amount))
                 .retrieve()
                 .body(PspChargeResponse.class);
