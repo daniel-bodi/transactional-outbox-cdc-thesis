@@ -16,7 +16,7 @@ public class FaultInjectionAutoConfiguration {
     @ConditionalOnMissingBean
     FaultInjector faultInjector(FaultInjectionProperties properties) {
         return new FaultInjector(properties.activeCrashPointName(), properties.targetReachCount(), properties.markerFile(),
-                // Runtime.halt forcibly terminate the running JVM
+                // Runtime.halt forcibly terminates the running JVM
                 // neither the shutdown hooks nor the finalizers are executed
                 Runtime.getRuntime()::halt);
     }

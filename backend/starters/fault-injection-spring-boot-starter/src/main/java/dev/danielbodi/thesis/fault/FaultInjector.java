@@ -2,6 +2,7 @@ package dev.danielbodi.thesis.fault;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.util.StringUtils;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.io.IOException;
@@ -34,6 +35,11 @@ public class FaultInjector {
         // the marker is only written right before a halt, so it can only exist after a restart
         this.alreadyCrashed = Files.exists(markerFile);
         this.haltFunction = haltFunction;
+
+        if (StringUtils.hasText(activeCrashPointName)) {
+            checkMarkerFileDirectoryWritable();
+            logActivation();
+        }
     }
 
     public void reach(String point) {
@@ -68,7 +74,25 @@ public class FaultInjector {
             throw new UncheckedIOException("Could not write crash point marker file: [%s]".formatted(markerFile), e);
         }
 
-        log.warn("Crash point [{}] reached for the [{}]. time, halting the JVM immediately", point, targetReachCount);
+        log.warn("Crash point [{}] reached [{}] times, halting the JVM immediately", point, targetReachCount);
         haltFunction.accept(EXIT_CODE);
+    }
+
+    private void checkMarkerFileDirectoryWritable() {
+        final Path markerDirectory = markerFile.toAbsolutePath().getParent();
+        if (!Files.isWritable(markerDirectory)) {
+            throw new IllegalStateException(
+                    "Crash point marker's directory is not writable: [%s]".formatted(markerDirectory));
+        }
+    }
+
+    private void logActivation() {
+        if (alreadyCrashed) {
+            log.info("Crash point [{}] already fired before a restart, fault injection disabled",
+                    activeCrashPointName);
+            return;
+        }
+        log.info("Crash point [{}] active, application crashes when point reached [{}] times",
+                activeCrashPointName, targetReachCount);
     }
 }

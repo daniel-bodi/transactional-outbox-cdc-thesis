@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
 /**
@@ -106,6 +107,22 @@ class FaultInjectorTest {
             softly.assertThat(haltsBeforeCommit).isEmpty();
             softly.assertThat(halts).containsExactly(FaultInjector.EXIT_CODE);
         });
+    }
+
+    @Test
+    void notWritableMarkerDirectoryFailsTheStartup() throws Exception {
+        final Path readOnlyDirectory = Files.createDirectory(tempDir.resolve("read-only"));
+        readOnlyDirectory.toFile().setWritable(false);
+        final Path marker = readOnlyDirectory.resolve("crash-point-fired");
+
+        assertThatThrownBy(() -> new FaultInjector("CP2", 1, marker, halts::add))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void targetReachCountBelowOneIsRejected() {
+        assertThatThrownBy(() -> new FaultInjectionProperties("CP2", 0, marker()))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     private FaultInjector createFaultInjector(String activeCrashPointName, int targetReachCount) {
