@@ -22,13 +22,13 @@
     </properties>
 
     <modules>
-        <module>event-publishing-api</module>
+        <module>libraries/event-publishing-api</module>
         <module>starters/idempotent-consumer-spring-boot-starter</module>
         <module>starters/transactional-outbox-spring-boot-starter</module>
         <module>starters/fault-injection-spring-boot-starter</module>
-        <module>payment-service</module>
-        <module>psp-mock-service</module>
-        <module>subscription-service</module>
+        <module>services/payment-service</module>
+        <module>services/psp-mock-service</module>
+        <module>services/subscription-service</module>
     </modules>
 
     <dependencyManagement>

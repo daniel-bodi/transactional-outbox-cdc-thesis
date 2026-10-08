@@ -1,5 +1,5 @@
 springdotenv:
-  directory: ../../
+  directory: ../../../
 
 server:
   port: ${SUBSCRIPTION_SERVICE_PORT}

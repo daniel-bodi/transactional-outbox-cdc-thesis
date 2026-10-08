@@ -1,5 +1,5 @@
 springdotenv:
-  directory: ../../
+  directory: ../../../
 
 spring:
   application:

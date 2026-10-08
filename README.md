@@ -37,14 +37,16 @@ which types of failures the pattern effectively mitigates, the associated trade-
 ```
 transactional-outbox-cdc-thesis/
 ├── backend/                                           Maven multi-module Java project
-│   ├── event-publishing-api/                          Integration event and publisher contract
+│   ├── libraries/
+│   │   └── event-publishing-api/                      Integration event and publisher contract
 │   ├── starters/                                      Reusable Spring Boot starters
 │   │   ├── transactional-outbox-spring-boot-starter/  Transactional outbox (PostgreSQL)
 │   │   ├── idempotent-consumer-spring-boot-starter/   Idempotent consumer (Spring Kafka, PostgreSQL)
 │   │   └── fault-injection-spring-boot-starter/       Deterministic crash points for the measurements
-│   ├── subscription-service/                          Reference producer service
-│   ├── payment-service/                               Reference consumer service
-│   ├── psp-mock-service/                              Payment service provider mock with a durable charge log
+│   ├── services/
+│   │   ├── subscription-service/                      Reference producer service
+│   │   ├── payment-service/                           Reference consumer service
+│   │   └── psp-mock-service/                          Payment service provider mock with a durable charge log
 │   └── Dockerfile                                     Shared service image, module selected by build argument
 ├── infrastructure/
 │   ├── debezium/                                      Connector definitions and registration script

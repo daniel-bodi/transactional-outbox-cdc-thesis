@@ -4,8 +4,8 @@ WORKDIR /workspace
 COPY . .
 # BuildKit cache for .m2 repository
 RUN --mount=type=cache,target=/root/.m2 \
-    ./mvnw -B -q -pl ${MODULE} -am package -DskipTests \
-    && cp ${MODULE}/target/${MODULE}-*.jar /workspace/app.jar
+    ./mvnw -B -q -pl :${MODULE} -am package -DskipTests \
+    && cp services/${MODULE}/target/${MODULE}-*.jar /workspace/app.jar
 
 FROM eclipse-temurin:25-jre
 # curl is used by the compose healthchecks
