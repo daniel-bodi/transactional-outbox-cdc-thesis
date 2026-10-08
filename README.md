@@ -37,9 +37,10 @@ which types of failures the pattern effectively mitigates, the associated trade-
 ```
 transactional-outbox-cdc-thesis/
 ├── backend/                                           Maven multi-module Java project
-│   ├── starters/                                      Reusable Spring Boot starters implementing the patterns
+│   ├── starters/                                      Reusable Spring Boot starters
 │   │   ├── transactional-outbox-spring-boot-starter/  Transactional outbox (PostgreSQL)
-│   │   └── idempotent-consumer-spring-boot-starter/   Idempotent consumer (Spring Kafka, PostgreSQL)
+│   │   ├── idempotent-consumer-spring-boot-starter/   Idempotent consumer (Spring Kafka, PostgreSQL)
+│   │   └── fault-injection-spring-boot-starter/       Deterministic crash points for the measurements
 │   ├── subscription-service/                          Reference producer service
 │   ├── payment-service/                               Reference consumer service
 │   ├── psp-mock-service/                              Payment service provider mock with a durable charge log
