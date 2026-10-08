@@ -25,8 +25,10 @@ import static org.assertj.core.api.SoftAssertions.assertSoftly;
 /**
  * @author danielbodi
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class ChargeIntegrationTest {
+// a provider without idempotency support
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = "psp.idempotency-key.enabled=false")
+class IdempotencyKeysDisabledIntegrationTest {
 
     @TestConfiguration
     static class ContainerConfiguration {
@@ -48,23 +50,46 @@ class ChargeIntegrationTest {
     void chargeIsExecutedAndRecorded() {
         final UUID reference = UUID.randomUUID();
 
-        final ResponseEntity<ChargeResponse> response = RestClient.create("http://localhost:" + port)
-                .post()
-                .uri("/charges")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(new ChargeRequest(reference, new BigDecimal("999.99")))
-                .retrieve()
-                .toEntity(ChargeResponse.class);
-
-        final int chargeCount = jdbcClient.sql("SELECT count(*) FROM charge WHERE reference = ?")
-                .param(reference)
-                .query(Integer.class)
-                .single();
+        final ResponseEntity<ChargeResponse> response = charge(reference, null);
 
         assertSoftly(softly -> {
             softly.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
             softly.assertThat(response.getBody().status()).isEqualTo(ChargeStatus.SUCCEEDED);
-            softly.assertThat(chargeCount).isEqualTo(1);
+            softly.assertThat(chargeCount(reference)).isEqualTo(1);
         });
+    }
+
+    @Test
+    void repeatedIdempotencyKeyIsChargedAgainWhenKeysAreIgnored() {
+        final UUID reference = UUID.randomUUID();
+        final String idempotencyKey = UUID.randomUUID().toString();
+
+        charge(reference, idempotencyKey);
+        charge(reference, idempotencyKey);
+
+        assertSoftly(softly -> softly.assertThat(chargeCount(reference)).isEqualTo(2));
+    }
+
+    private ResponseEntity<ChargeResponse> charge(UUID reference, String idempotencyKey) {
+        final String baseUrl = "http://localhost:%d".formatted(port);
+        final RestClient.RequestBodySpec request = RestClient.create(baseUrl)
+                .post()
+                .uri("/charges")
+                .contentType(MediaType.APPLICATION_JSON);
+
+        if (idempotencyKey != null) {
+            request.header("Idempotency-Key", idempotencyKey);
+        }
+
+        return request.body(new ChargeRequest(reference, new BigDecimal("999.99")))
+                .retrieve()
+                .toEntity(ChargeResponse.class);
+    }
+
+    private int chargeCount(UUID reference) {
+        return jdbcClient.sql("SELECT count(*) FROM charge WHERE reference = ?")
+                .param(reference)
+                .query(Integer.class)
+                .single();
     }
 }
