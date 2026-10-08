@@ -1,6 +1,6 @@
 package dev.danielbodi.thesis.outbox;
 
-import dev.danielbodi.thesis.outbox.event.OutboxEvent;
+import dev.danielbodi.thesis.event.IntegrationEvent;
 import dev.danielbodi.thesis.outbox.event.OutboxEventPublisher;
 import io.micrometer.tracing.Span;
 import io.micrometer.tracing.Tracer;
@@ -166,7 +166,7 @@ class OutboxStarterIntegrationTest {
         return jdbcTemplate.queryForObject("SELECT " + column + " FROM outbox", String.class);
     }
 
-    static final class TestEvent implements OutboxEvent {
+    static final class TestEvent implements IntegrationEvent {
 
         @Override
         public String getAggregateId() {

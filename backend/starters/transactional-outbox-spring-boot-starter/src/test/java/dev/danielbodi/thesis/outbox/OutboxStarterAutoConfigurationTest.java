@@ -1,5 +1,6 @@
 package dev.danielbodi.thesis.outbox;
 
+import dev.danielbodi.thesis.event.IntegrationEventPublisher;
 import dev.danielbodi.thesis.outbox.event.OutboxEventPublisher;
 import dev.danielbodi.thesis.outbox.persistence.OutboxFactory;
 import dev.danielbodi.thesis.outbox.persistence.OutboxRepository;
@@ -55,6 +56,19 @@ class OutboxStarterAutoConfigurationTest {
                         .hasSingleBean(OutboxEventPublisher.class)
                         .getBean(OutboxEventPublisher.class)
                         .isSameAs(applicationBean));
+    }
+
+    @Test
+    void autoConfigurationBacksOffWhenAnotherIntegrationEventPublisherIsConfigured() {
+        final IntegrationEventPublisher otherPublisher = event -> {
+        };
+
+        contextRunner
+                .withBean("otherPublisher", IntegrationEventPublisher.class, () -> otherPublisher)
+                .run(context -> assertThat(context)
+                        .doesNotHaveBean(OutboxEventPublisher.class)
+                        .getBean(IntegrationEventPublisher.class)
+                        .isSameAs(otherPublisher));
     }
 
     @Test

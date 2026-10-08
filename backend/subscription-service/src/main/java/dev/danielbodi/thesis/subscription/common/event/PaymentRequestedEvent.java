@@ -1,6 +1,6 @@
 package dev.danielbodi.thesis.subscription.common.event;
 
-import dev.danielbodi.thesis.outbox.event.OutboxEvent;
+import dev.danielbodi.thesis.event.IntegrationEvent;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -11,7 +11,7 @@ import java.math.BigDecimal;
  */
 @Getter
 @RequiredArgsConstructor
-public class PaymentRequestedEvent implements OutboxEvent {
+public class PaymentRequestedEvent implements IntegrationEvent {
 
     public static final String AGGREGATE_TYPE = "Subscription";
     public static final String EVENT_TYPE = "payment_requested";

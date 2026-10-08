@@ -1,6 +1,6 @@
 package dev.danielbodi.thesis.payment.common.event;
 
-import dev.danielbodi.thesis.outbox.event.OutboxEvent;
+import dev.danielbodi.thesis.event.IntegrationEvent;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Getter
 @RequiredArgsConstructor
-public class PaymentFailedEvent implements OutboxEvent {
+public class PaymentFailedEvent implements IntegrationEvent {
 
     public static final String AGGREGATE_TYPE = "Payment";
     public static final String EVENT_TYPE = "payment_failed";

@@ -1,5 +1,6 @@
 package dev.danielbodi.thesis.outbox;
 
+import dev.danielbodi.thesis.event.IntegrationEventPublisher;
 import dev.danielbodi.thesis.outbox.event.OutboxEventPublisher;
 import dev.danielbodi.thesis.outbox.persistence.OutboxFactory;
 import dev.danielbodi.thesis.outbox.persistence.OutboxRepository;
@@ -43,8 +44,9 @@ public class OutboxPersistenceAutoConfiguration {
         return new OutboxFactory(objectMapper, traceContextProvider);
     }
 
+    // backs off when another IntegrationEventPublisher is configured, e.g. the dual-write baseline
     @Bean
-    @ConditionalOnMissingBean
+    @ConditionalOnMissingBean(IntegrationEventPublisher.class)
     OutboxEventPublisher outboxEventPublisher(OutboxFactory outboxFactory, OutboxRepository outboxRepository) {
         return new OutboxEventPublisher(outboxFactory, outboxRepository);
     }

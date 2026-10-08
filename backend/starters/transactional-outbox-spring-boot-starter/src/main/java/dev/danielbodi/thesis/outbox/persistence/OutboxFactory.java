@@ -1,6 +1,6 @@
 package dev.danielbodi.thesis.outbox.persistence;
 
-import dev.danielbodi.thesis.outbox.event.OutboxEvent;
+import dev.danielbodi.thesis.event.IntegrationEvent;
 import dev.danielbodi.thesis.outbox.tracing.OutboxTraceContextProvider;
 import lombok.RequiredArgsConstructor;
 import tools.jackson.databind.ObjectMapper;
@@ -16,7 +16,7 @@ public class OutboxFactory {
     private final ObjectMapper objectMapper;
     private final OutboxTraceContextProvider traceContextProvider;
 
-    public Outbox from(OutboxEvent event) {
+    public Outbox from(IntegrationEvent event) {
         final UUID id = UUID.randomUUID();
         final String payload = objectMapper.writeValueAsString(event);
         final String traceContext = traceContextProvider.currentTraceContext();

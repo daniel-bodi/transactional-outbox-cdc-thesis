@@ -1,7 +1,7 @@
 package dev.danielbodi.thesis.subscription.create.service;
 
+import dev.danielbodi.thesis.event.IntegrationEventPublisher;
 import dev.danielbodi.thesis.fault.FaultInjector;
-import dev.danielbodi.thesis.outbox.event.OutboxEventPublisher;
 import dev.danielbodi.thesis.subscription.common.event.PaymentRequestedEvent;
 import dev.danielbodi.thesis.subscription.common.persistence.PaymentRequest;
 import dev.danielbodi.thesis.subscription.common.persistence.PaymentRequestRepository;
@@ -25,7 +25,7 @@ public class CreateSubscriptionService {
     private final SubscriptionRepository subscriptionRepository;
     private final PlanRepository planRepository;
     private final PaymentRequestRepository paymentRequestRepository;
-    private final OutboxEventPublisher outboxEventPublisher;
+    private final IntegrationEventPublisher integrationEventPublisher;
     private final FaultInjector faultInjector;
 
     @Transactional
@@ -36,7 +36,7 @@ public class CreateSubscriptionService {
         final Subscription subscription = subscriptionRepository.save(Subscription.pending(customerId, plan));
         final PaymentRequest paymentRequest = paymentRequestRepository.save(PaymentRequest.forSubscription(subscription));
 
-        outboxEventPublisher.publish(new PaymentRequestedEvent(
+        integrationEventPublisher.publish(new PaymentRequestedEvent(
                 subscription.getId().toString(),
                 paymentRequest.getId().toString(),
                 paymentRequest.getAmount()));

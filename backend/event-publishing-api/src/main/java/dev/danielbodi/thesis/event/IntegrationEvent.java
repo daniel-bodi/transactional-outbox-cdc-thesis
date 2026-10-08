@@ -1,11 +1,11 @@
-package dev.danielbodi.thesis.outbox.event;
+package dev.danielbodi.thesis.event;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * @author danielbodi
  */
-public interface OutboxEvent {
+public interface IntegrationEvent {
 
     @JsonIgnore
     String getAggregateId();

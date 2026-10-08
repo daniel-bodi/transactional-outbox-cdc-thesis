@@ -22,6 +22,7 @@
     </properties>
 
     <modules>
+        <module>event-publishing-api</module>
         <module>starters/idempotent-consumer-spring-boot-starter</module>
         <module>starters/transactional-outbox-spring-boot-starter</module>
         <module>starters/fault-injection-spring-boot-starter</module>
@@ -32,6 +33,11 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>dev.danielbodi.thesis</groupId>
+                <artifactId>event-publishing-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>dev.danielbodi.thesis</groupId>
                 <artifactId>transactional-outbox-spring-boot-starter</artifactId>

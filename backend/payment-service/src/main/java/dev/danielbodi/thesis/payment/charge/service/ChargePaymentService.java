@@ -1,7 +1,7 @@
 package dev.danielbodi.thesis.payment.charge.service;
 
+import dev.danielbodi.thesis.event.IntegrationEventPublisher;
 import dev.danielbodi.thesis.fault.FaultInjector;
-import dev.danielbodi.thesis.outbox.event.OutboxEventPublisher;
 import dev.danielbodi.thesis.payment.common.event.PaymentFailedEvent;
 import dev.danielbodi.thesis.payment.common.event.PaymentSucceededEvent;
 import dev.danielbodi.thesis.payment.common.persistence.Payment;
@@ -27,7 +27,7 @@ public class ChargePaymentService {
 
     private final PspClient pspClient;
     private final PaymentRepository paymentRepository;
-    private final OutboxEventPublisher outboxEventPublisher;
+    private final IntegrationEventPublisher integrationEventPublisher;
     private final FaultInjector faultInjector;
 
     @Transactional
@@ -53,7 +53,7 @@ public class ChargePaymentService {
         log.info("Payment [{}] recorded for reference: [{}] with status: [{}]",
                 payment.getId(), reference, status);
 
-        outboxEventPublisher.publish(switch (status) {
+        integrationEventPublisher.publish(switch (status) {
             case SUCCEEDED -> new PaymentSucceededEvent(reference.toString(), reference.toString());
             case FAILED -> new PaymentFailedEvent(reference.toString(), reference.toString());
         });
