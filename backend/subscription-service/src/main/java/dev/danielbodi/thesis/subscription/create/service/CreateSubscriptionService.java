@@ -1,5 +1,6 @@
 package dev.danielbodi.thesis.subscription.create.service;
 
+import dev.danielbodi.thesis.fault.FaultInjector;
 import dev.danielbodi.thesis.outbox.event.OutboxEventPublisher;
 import dev.danielbodi.thesis.subscription.common.event.PaymentRequestedEvent;
 import dev.danielbodi.thesis.subscription.common.persistence.PaymentRequest;
@@ -25,6 +26,7 @@ public class CreateSubscriptionService {
     private final PlanRepository planRepository;
     private final PaymentRequestRepository paymentRequestRepository;
     private final OutboxEventPublisher outboxEventPublisher;
+    private final FaultInjector faultInjector;
 
     @Transactional
     public UUID createSubscription(UUID customerId, UUID planId) {
@@ -38,6 +40,9 @@ public class CreateSubscriptionService {
                 subscription.getId().toString(),
                 paymentRequest.getId().toString(),
                 paymentRequest.getAmount()));
+
+        // S1: the subscription is committed, the HTTP response has not been sent yet
+        faultInjector.reachAfterCommit("AFTER_SUBSCRIPTION_COMMIT");
 
         return subscription.getId();
     }
