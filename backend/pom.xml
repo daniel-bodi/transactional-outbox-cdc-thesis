@@ -26,6 +26,7 @@
         <module>starters/idempotent-consumer-spring-boot-starter</module>
         <module>starters/transactional-outbox-spring-boot-starter</module>
         <module>starters/fault-injection-spring-boot-starter</module>
+        <module>starters/dual-write-spring-boot-starter</module>
         <module>services/payment-service</module>
         <module>services/psp-mock-service</module>
         <module>services/subscription-service</module>
@@ -51,6 +52,11 @@
             <dependency>
                 <groupId>dev.danielbodi.thesis</groupId>
                 <artifactId>fault-injection-spring-boot-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.danielbodi.thesis</groupId>
+                <artifactId>dual-write-spring-boot-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

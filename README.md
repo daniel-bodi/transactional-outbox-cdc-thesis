@@ -42,7 +42,8 @@ transactional-outbox-cdc-thesis/
 │   ├── starters/                                      Reusable Spring Boot starters
 │   │   ├── transactional-outbox-spring-boot-starter/  Transactional outbox (PostgreSQL)
 │   │   ├── idempotent-consumer-spring-boot-starter/   Idempotent consumer (Spring Kafka, PostgreSQL)
-│   │   └── fault-injection-spring-boot-starter/       Deterministic crash points for the measurements
+│   │   ├── fault-injection-spring-boot-starter/       Deterministic crash points for the measurements
+│   │   └── dual-write-spring-boot-starter/            Dual-write baseline publisher for the measurements
 │   ├── services/
 │   │   ├── subscription-service/                      Reference producer service
 │   │   ├── payment-service/                           Reference consumer service

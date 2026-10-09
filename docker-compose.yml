@@ -149,6 +149,8 @@ services:
       # crash point inactive by default
       FAULT_ACTIVE_CRASH_POINT_NAME: ${FAULT_ACTIVE_CRASH_POINT_NAME:-}
       FAULT_TARGET_REACH_COUNT: ${FAULT_TARGET_REACH_COUNT:-1}
+      # V0 (dual-write baseline) instead of the transactional outbox, off by default
+      DUAL_WRITE_ENABLED: ${DUAL_WRITE_ENABLED:-false}
       SUBSCRIPTION_SERVICE_PORT: 8080
       SUBSCRIPTION_DB_HOST: subscription-db
       SUBSCRIPTION_DB_PORT: 5432
@@ -184,6 +186,8 @@ services:
       # crash point inactive by default
       FAULT_ACTIVE_CRASH_POINT_NAME: ${FAULT_ACTIVE_CRASH_POINT_NAME:-}
       FAULT_TARGET_REACH_COUNT: ${FAULT_TARGET_REACH_COUNT:-1}
+      # V0 (dual-write baseline) instead of the transactional outbox, off by default
+      DUAL_WRITE_ENABLED: ${DUAL_WRITE_ENABLED:-false}
       PAYMENT_DB_HOST: payment-db
       PAYMENT_DB_PORT: 5432
       PAYMENT_DB_NAME: ${PAYMENT_DB_NAME}
