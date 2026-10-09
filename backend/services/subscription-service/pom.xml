@@ -59,6 +59,10 @@
             <artifactId>fault-injection-spring-boot-starter</artifactId>
         </dependency>
         <dependency>
+            <groupId>dev.danielbodi.thesis</groupId>
+            <artifactId>dual-write-spring-boot-starter</artifactId>
+        </dependency>
+        <dependency>
             <groupId>me.paulschwarz</groupId>
             <artifactId>springboot4-dotenv</artifactId>
         </dependency>
