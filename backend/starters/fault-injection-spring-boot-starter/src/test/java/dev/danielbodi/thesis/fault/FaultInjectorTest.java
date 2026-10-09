@@ -3,6 +3,7 @@ package dev.danielbodi.thesis.fault;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.support.TransactionSynchronizationUtils;
 
@@ -107,6 +108,27 @@ class FaultInjectorTest {
             softly.assertThat(haltsBeforeCommit).isEmpty();
             softly.assertThat(halts).containsExactly(FaultInjector.EXIT_CODE);
         });
+    }
+
+    @Test
+    void afterCommitCrashPointRunsBeforeTheOtherAfterCommitCallbacks() {
+        final List<String> callbacks = new ArrayList<>();
+        final FaultInjector faultInjector = new FaultInjector("CP1", 1, marker(), exitCode -> callbacks.add("crash"));
+
+        TransactionSynchronizationManager.initSynchronization();
+
+        // registered first, like the dual-write send that precedes the crash point in the business code
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                callbacks.add("send");
+            }
+        });
+        faultInjector.reachAfterCommit("CP1");
+
+        TransactionSynchronizationUtils.triggerAfterCommit();
+
+        assertThat(callbacks).containsExactly("crash", "send");
     }
 
     @Test

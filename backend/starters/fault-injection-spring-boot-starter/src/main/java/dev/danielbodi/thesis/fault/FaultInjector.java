@@ -1,6 +1,7 @@
 package dev.danielbodi.thesis.fault;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.Ordered;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.util.StringUtils;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -58,6 +59,12 @@ public class FaultInjector {
             @Override
             public void afterCommit() {
                 reach(point);
+            }
+
+            // runs before every other after-commit callback, e.g. before the dual-write send
+            @Override
+            public int getOrder() {
+                return Ordered.HIGHEST_PRECEDENCE;
             }
         };
         TransactionSynchronizationManager.registerSynchronization(synchronization);
