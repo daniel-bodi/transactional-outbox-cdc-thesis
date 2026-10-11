@@ -1,3 +1,16 @@
+springdotenv:
+  directory: ../../
+
 spring:
   application:
     name: measurement-runner
+  main:
+    banner-mode: off
+
+measurement:
+  compose-directory: ../../
+  kafka-connect-url: http://localhost:${KAFKA_CONNECT_PORT}
+
+logging:
+  pattern:
+    console: "%d{HH:mm:ss.SSS} %-5level %logger{0} - %msg%n"
