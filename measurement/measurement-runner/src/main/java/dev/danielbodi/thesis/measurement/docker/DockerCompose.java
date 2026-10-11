@@ -1,6 +1,6 @@
 package dev.danielbodi.thesis.measurement.docker;
 
-import dev.danielbodi.thesis.measurement.configuration.MeasurementProperties;
+import dev.danielbodi.thesis.measurement.properties.MeasurementProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

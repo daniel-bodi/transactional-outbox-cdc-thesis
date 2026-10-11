@@ -6,10 +6,18 @@ spring:
     name: measurement-runner
   main:
     banner-mode: off
+  http:
+    clients:
+      connect-timeout: 2s
+      read-timeout: 5s
 
 measurement:
   compose-directory: ../../
   kafka-connect-url: http://localhost:${KAFKA_CONNECT_PORT}
+  subscription-service-url: http://localhost:${SUBSCRIPTION_SERVICE_PORT}
+  warmup-count: 10
+  load-count: 100
+  load-rate-per-second: 10
 
 logging:
   pattern:

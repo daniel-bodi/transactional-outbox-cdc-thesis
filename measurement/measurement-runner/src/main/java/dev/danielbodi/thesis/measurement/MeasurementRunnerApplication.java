@@ -1,6 +1,6 @@
 package dev.danielbodi.thesis.measurement;
 
-import dev.danielbodi.thesis.measurement.configuration.MeasurementProperties;
+import dev.danielbodi.thesis.measurement.properties.MeasurementProperties;
 import dev.danielbodi.thesis.measurement.run.MeasurementRun;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;

@@ -1,7 +1,8 @@
-package dev.danielbodi.thesis.measurement.configuration;
+package dev.danielbodi.thesis.measurement.properties;
 
 import dev.danielbodi.thesis.measurement.scenario.Scenario;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
@@ -15,5 +16,9 @@ import java.nio.file.Path;
 public record MeasurementProperties(
         @NotNull Scenario scenario,
         @NotNull Path composeDirectory,
-        @NotNull String kafkaConnectUrl) {
+        @NotNull String kafkaConnectUrl,
+        @NotNull String subscriptionServiceUrl,
+        @Positive int warmupCount,
+        @Positive int loadCount,
+        @Positive int loadRatePerSecond) {
 }
