@@ -44,9 +44,6 @@ public class PaymentRequest {
         this.amount = amount;
     }
 
-    /**
-     * Requests the price of the subscribed plan.
-     */
     public static PaymentRequest forSubscription(Subscription subscription) {
         return new PaymentRequest(subscription, subscription.getPlan().getAmount());
     }

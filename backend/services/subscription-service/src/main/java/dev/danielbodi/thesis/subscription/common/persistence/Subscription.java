@@ -53,9 +53,6 @@ public class Subscription {
         this.status = SubscriptionStatus.PENDING;
     }
 
-    /**
-     * A new subscription is not usable until its payment settles, so it always starts as pending.
-     */
     public static Subscription pending(UUID customerId, Plan plan) {
         return new Subscription(customerId, plan);
     }

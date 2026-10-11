@@ -45,8 +45,8 @@ transactional-outbox-cdc-thesis/
 │   │   ├── fault-injection-spring-boot-starter/       Deterministic crash points for the measurements
 │   │   └── dual-write-spring-boot-starter/            Dual-write baseline publisher for the measurements
 │   ├── services/
-│   │   ├── subscription-service/                      Reference producer service
-│   │   ├── payment-service/                           Reference consumer service
+│   │   ├── subscription-service/                      Subscriptions: requests their payment and settles them on the outcome
+│   │   ├── payment-service/                           Payments: charges the provider and publishes the outcome
 │   │   └── psp-mock-service/                          Payment service provider mock with a durable charge log
 │   └── Dockerfile                                     Shared service image, module selected by build argument
 ├── infrastructure/
@@ -77,8 +77,33 @@ docker compose up -d --build
 ./infrastructure/debezium/register-connectors.sh
 ```
 
-Once started, the subscription service listens on `http://localhost:8080`, the PSP mock on `http://localhost:8082`,
-and the Kafbat UI on `http://localhost:8081`.
+With the default `.env` values the stack is reachable from the host at:
+
+| Component            | Address                 |
+|----------------------|-------------------------|
+| Subscription service | `http://localhost:8080` |
+| PSP mock             | `http://localhost:8082` |
+| Kafbat UI            | `http://localhost:8081` |
+| Kafka Connect REST   | `http://localhost:8083` |
+| Kafka                | `localhost:29092`       |
+| Subscription DB      | `localhost:5432`        |
+| Payment DB           | `localhost:5433`        |
+| PSP DB               | `localhost:5434`        |
 
 To run a service from the IDE or with `spring-boot:run` instead, stop its container
 (e.g. `docker compose stop payment-service`); the values in `.env` address the stack from the host.
+
+## Usage
+
+```bash
+# Create a subscription for the basic plan
+curl -X POST http://localhost:8080/subscriptions \
+  -H 'Content-Type: application/json' \
+  -d '{"customerId":"'"$(uuidgen)"'","planId":"11111111-1111-1111-1111-111111111111"}'
+
+# Check the subscriptions: PENDING until the payment outcome arrives, then ACTIVE or FAILED
+docker exec subscription-db psql -U subscription -d subscription \
+  -c "SELECT id, status, created_at, completed_at FROM subscription ORDER BY created_at"
+```
+
+The seeded plans are `basic` (`11111111-…`), `pro` (`22222222-…`) and `enterprise` (`33333333-…`).

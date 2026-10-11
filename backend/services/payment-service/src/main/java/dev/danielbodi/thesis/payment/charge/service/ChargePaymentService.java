@@ -43,12 +43,12 @@ public class ChargePaymentService {
         // S5b: the provider has charged, nothing is committed yet
         faultInjector.reach("AFTER_PSP_CALL");
 
-        final PaymentStatus status = switch (response.status()) {
-            case SUCCEEDED -> PaymentStatus.SUCCEEDED;
-            case FAILED -> PaymentStatus.FAILED;
-        };
-        final Payment payment = paymentRepository.save(
-                new Payment(reference, amount, status, response.chargeId().toString()));
+        final String providerReference = response.chargeId().toString();
+        final Payment payment = paymentRepository.save(switch (response.status()) {
+            case SUCCEEDED -> Payment.succeeded(reference, amount, providerReference);
+            case FAILED -> Payment.failed(reference, amount, providerReference);
+        });
+        final PaymentStatus status = payment.getStatus();
 
         log.info("Payment [{}] recorded for reference: [{}] with status: [{}]",
                 payment.getId(), reference, status);

@@ -10,6 +10,9 @@ spring:
     username: ${PAYMENT_DB_USER}
     password: ${PAYMENT_DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      # default 30s
+      connection-timeout: 2000
 
   jpa:
     properties:
@@ -17,7 +20,6 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: validate
-    show-sql: true
 
   flyway:
     enabled: true

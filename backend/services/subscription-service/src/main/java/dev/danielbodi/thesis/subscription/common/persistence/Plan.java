@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -11,17 +12,12 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 /**
- * Reference data owned by the subscription bounded context.
- * <p>
- * The plan is the source of truth for the price a subscription is billed at;
- * repricing a plan therefore reprices every subscription that references it.
- *
  * @author danielbodi
  */
 @Entity
 @Table(name = "plan")
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Plan {
 
     @Id

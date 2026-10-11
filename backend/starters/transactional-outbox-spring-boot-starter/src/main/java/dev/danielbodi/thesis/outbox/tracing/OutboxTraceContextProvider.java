@@ -5,8 +5,5 @@ package dev.danielbodi.thesis.outbox.tracing;
  */
 public interface OutboxTraceContextProvider {
 
-    /**
-     * Returns the current trace context, or {@code null} when none is available.
-     */
     String currentTraceContext();
 }
