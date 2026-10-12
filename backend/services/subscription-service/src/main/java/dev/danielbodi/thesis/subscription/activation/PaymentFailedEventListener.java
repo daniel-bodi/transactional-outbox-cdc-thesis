@@ -20,7 +20,7 @@ public class PaymentFailedEventListener {
     private final FaultInjector faultInjector;
 
     @Idempotent
-    @KafkaListener(topics = "outbox.event.payment_failed")
+    @KafkaListener(topics = "outbox.event.payment_failed", properties = "group.instance.id=subscription-service-payment-failed")
     public void on(PaymentFailedEvent event) {
         log.info("Received payment failure: reference=[{}]", event.reference());
 

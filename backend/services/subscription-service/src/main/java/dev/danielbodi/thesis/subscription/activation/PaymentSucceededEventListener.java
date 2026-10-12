@@ -20,7 +20,7 @@ public class PaymentSucceededEventListener {
     private final FaultInjector faultInjector;
 
     @Idempotent
-    @KafkaListener(topics = "outbox.event.payment_succeeded")
+    @KafkaListener(topics = "outbox.event.payment_succeeded", properties = "group.instance.id=subscription-service-payment-succeeded")
     public void on(PaymentSucceededEvent event) {
         log.info("Received payment success: reference=[{}]", event.reference());
 
