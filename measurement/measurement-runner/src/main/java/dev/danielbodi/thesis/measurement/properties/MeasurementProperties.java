@@ -7,6 +7,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
 import java.nio.file.Path;
+import java.time.Duration;
 
 /**
  * @author danielbodi
@@ -20,5 +21,7 @@ public record MeasurementProperties(
         @NotNull String subscriptionServiceUrl,
         @Positive int warmupCount,
         @Positive int loadCount,
-        @Positive int loadRatePerSecond) {
+        @Positive int loadRatePerSecond,
+        @NotNull Duration warmupTimeout,
+        @NotNull Duration convergenceTimeout) {
 }

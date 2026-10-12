@@ -1,10 +1,11 @@
 package dev.danielbodi.thesis.measurement.load;
 
-import dev.danielbodi.thesis.measurement.properties.MeasurementProperties;
+import dev.danielbodi.thesis.measurement.evaluation.ConvergenceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.List;
 
 /**
@@ -15,10 +16,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class WarmUpService {
 
-    private final MeasurementProperties properties;
     private final LoadGenerator loadGenerator;
+    private final ConvergenceService convergenceService;
 
-    public void warmUp(int warmUpCount, int ratePerSecond ) {
+    // the stack is ready when the warm-up subscriptions made the full round trip:
+    // the services are up, the consumers have their partitions, the connectors run
+    public void warmUp(int warmUpCount, int ratePerSecond, Duration timeout) {
         log.info("Starting warm-up with [{}] requests and [{}] requests per second", warmUpCount, ratePerSecond);
 
         final List<RequestResult> warmUpResults = loadGenerator.generate(warmUpCount, ratePerSecond);
@@ -28,6 +31,10 @@ public class WarmUpService {
                 .toList();
         if (!failed.isEmpty()) {
             throw new IllegalStateException("Warm-up failed, the stack is not ready. Request details: " + failed);
+        }
+
+        if (!convergenceService.awaitNoPending(timeout)) {
+            throw new IllegalStateException("Warm-up subscriptions did not leave PENDING within " + timeout);
         }
 
         log.info("Warm-up completed with [{}] subscriptions", warmUpResults.size());

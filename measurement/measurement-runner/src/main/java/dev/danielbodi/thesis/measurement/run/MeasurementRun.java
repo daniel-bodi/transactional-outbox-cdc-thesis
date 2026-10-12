@@ -2,6 +2,9 @@ package dev.danielbodi.thesis.measurement.run;
 
 import dev.danielbodi.thesis.measurement.properties.MeasurementProperties;
 import dev.danielbodi.thesis.measurement.docker.DockerCompose;
+import dev.danielbodi.thesis.measurement.evaluation.ConvergenceService;
+import dev.danielbodi.thesis.measurement.evaluation.Evaluation;
+import dev.danielbodi.thesis.measurement.evaluation.Evaluator;
 import dev.danielbodi.thesis.measurement.load.LoadGenerator;
 import dev.danielbodi.thesis.measurement.load.RequestOutcome;
 import dev.danielbodi.thesis.measurement.load.RequestResult;
@@ -27,6 +30,8 @@ public class MeasurementRun {
     private final DockerCompose dockerCompose;
     private final WarmUpService warmUpService;
     private final LoadGenerator loadGenerator;
+    private final ConvergenceService convergenceService;
+    private final Evaluator evaluator;
 
     public void execute(Scenario scenario) {
         log.info("Run of scenario [{}] with environment [{}]", scenario, scenario.getEnvironment());
@@ -43,14 +48,29 @@ public class MeasurementRun {
 
             log.info("The docker compose stack is up and running");
 
-            warmUpService.warmUp(properties.warmupCount(), properties.loadRatePerSecond());
+            warmUpService.warmUp(properties.warmupCount(), properties.loadRatePerSecond(), properties.warmupTimeout());
 
             final List<RequestResult> requests = loadGenerator.generate(properties.loadCount(), properties.loadRatePerSecond());
             log.info("Load completed: {}", outcomes(requests));
 
+            // the run is evaluated once every subscription left PENDING, or the timeout is over
+            final boolean converged = convergenceService.awaitNoPending(properties.convergenceTimeout());
+
+            final Evaluation evaluation = evaluator.evaluate();
+            logSummary(converged, evaluation);
         } finally {
             dockerCompose.down();
         }
+    }
+
+    private static void logSummary(boolean converged, Evaluation evaluation) {
+        log.info("Converged: {}", converged);
+        evaluation.invariantResults().forEach((invariant, result) -> log.info("  {} {} {} ({} violations)",
+                invariant.getThesisId(), invariant, result.verdict(), result.violations().size()));
+        log.info("  subscriptions {}, payments {}, charges {}",
+                evaluation.subscriptions(), evaluation.payments(), evaluation.charges());
+        log.info("  duplicate deliveries {}, duplicate PSP requests {}",
+                evaluation.duplicateDeliveries(), evaluation.duplicateRequests());
     }
 
     private static Map<RequestOutcome, Long> outcomes(List<RequestResult> requests) {

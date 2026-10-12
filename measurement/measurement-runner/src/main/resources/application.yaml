@@ -18,6 +18,21 @@ measurement:
   warmup-count: 10
   load-count: 100
   load-rate-per-second: 10
+  warmup-timeout: 120s
+  convergence-timeout: 120s
+  databases:
+    subscription:
+      url: jdbc:postgresql://localhost:${SUBSCRIPTION_DB_PORT}/${SUBSCRIPTION_DB_NAME}
+      username: ${SUBSCRIPTION_DB_USER}
+      password: ${SUBSCRIPTION_DB_PASSWORD}
+    payment:
+      url: jdbc:postgresql://localhost:${PAYMENT_DB_PORT}/${PAYMENT_DB_NAME}
+      username: ${PAYMENT_DB_USER}
+      password: ${PAYMENT_DB_PASSWORD}
+    psp:
+      url: jdbc:postgresql://localhost:${PSP_DB_PORT}/${PSP_DB_NAME}
+      username: ${PSP_DB_USER}
+      password: ${PSP_DB_PASSWORD}
 
 logging:
   pattern:
