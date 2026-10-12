@@ -17,11 +17,12 @@ import java.time.Duration;
 public record MeasurementProperties(
         @NotNull Scenario scenario,
         @NotNull Path composeDirectory,
+        @NotNull Path resultsDirectory,
         @NotNull String kafkaConnectUrl,
         @NotNull String subscriptionServiceUrl,
-        @Positive int warmupCount,
+        @Positive int warmUpCount,
         @Positive int loadCount,
         @Positive int loadRatePerSecond,
-        @NotNull Duration warmupTimeout,
+        @NotNull Duration warmUpTimeout,
         @NotNull Duration convergenceTimeout) {
 }

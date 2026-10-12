@@ -13,12 +13,13 @@ spring:
 
 measurement:
   compose-directory: ../../
+  results-directory: ../results
   kafka-connect-url: http://localhost:${KAFKA_CONNECT_PORT}
   subscription-service-url: http://localhost:${SUBSCRIPTION_SERVICE_PORT}
-  warmup-count: 10
+  warm-up-count: 10
   load-count: 100
   load-rate-per-second: 10
-  warmup-timeout: 120s
+  warm-up-timeout: 120s
   convergence-timeout: 120s
   databases:
     subscription:

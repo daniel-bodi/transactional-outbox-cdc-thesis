@@ -43,3 +43,6 @@ build/
 logs/
 *.log
 
+### Measurement results ###
+measurement/results/*
+!measurement/results/.gitkeep

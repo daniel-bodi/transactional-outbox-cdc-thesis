@@ -4,12 +4,25 @@ import dev.danielbodi.thesis.measurement.database.PaymentDao;
 import dev.danielbodi.thesis.measurement.database.PspDao;
 import dev.danielbodi.thesis.measurement.database.StatusCounts;
 import dev.danielbodi.thesis.measurement.database.SubscriptionDao;
+import dev.danielbodi.thesis.measurement.database.SubscriptionRow;
+import dev.danielbodi.thesis.measurement.evaluation.model.Evaluation;
+import dev.danielbodi.thesis.measurement.evaluation.model.Invariant;
+import dev.danielbodi.thesis.measurement.evaluation.model.InvariantResult;
+import dev.danielbodi.thesis.measurement.evaluation.model.Latency;
+import dev.danielbodi.thesis.measurement.evaluation.model.Verdict;
+import dev.danielbodi.thesis.measurement.load.RequestOutcome;
+import dev.danielbodi.thesis.measurement.load.RequestResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -22,11 +35,18 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class Evaluator {
 
+    private static final double PERCENTILE_50 = 0.5;
+    private static final double PERCENTILE_95 = 0.95;
+
     private final SubscriptionDao subscriptionDao;
     private final PaymentDao paymentDao;
     private final PspDao pspDao;
+    private final ConvergenceService convergenceService;
 
-    public Evaluation evaluate() {
+    public Evaluation evaluate(List<RequestResult> requests, Duration convergenceTimeout) {
+        // the run is evaluated once every subscription left PENDING, or the timeout is over
+        final boolean converged = convergenceService.awaitNoPending(convergenceTimeout);
+
         // the queries run one after the other, while a run that did not converge may still be moving:
         // each set is read before the one it is compared with that can only grow, so a change in between
         // cannot fake a violation (e.g. a payment completed after its subscription was read as PENDING)
@@ -37,25 +57,39 @@ public class Evaluator {
         final Set<UUID> charged = chargedCountsByReference.keySet();
 
         final Map<Invariant, InvariantResult> invariantResults = new EnumMap<>(Invariant.class);
-        invariantResults.put(Invariant.NO_LOST_REQUEST, InvariantResult.of(difference(requested, charged)));
-        invariantResults.put(Invariant.NO_LOST_OUTCOME, InvariantResult.of(intersection(paid, pending)));
-        invariantResults.put(Invariant.NO_DUPLICATE_CHARGE, InvariantResult.of(chargedMoreThanOnce(chargedCountsByReference)));
-        invariantResults.put(Invariant.NO_PHANTOM_CHARGE, InvariantResult.of(difference(charged, requested)));
+        invariantResults.put(Invariant.NO_LOST_REQUEST, invariantResult(difference(requested, charged)));
+        invariantResults.put(Invariant.NO_LOST_OUTCOME, invariantResult(intersection(paid, pending)));
+        invariantResults.put(Invariant.NO_DUPLICATE_CHARGE, invariantResult(chargedMoreThanOnce(chargedCountsByReference)));
+        invariantResults.put(Invariant.NO_PHANTOM_CHARGE, invariantResult(difference(charged, requested)));
 
-        final StatusCounts statusCounts = subscriptionDao.statusCounts();
         final long totalChargeCount = chargedCountsByReference.values().stream().mapToLong(Long::longValue).sum();
+        final long duplicateRequestCount = pspDao.duplicateRequests();
+
+        final List<SubscriptionRow> subscriptions = subscriptionDao.subscriptions();
+        final StatusCounts statusCounts = statusCounts(subscriptions);
+
+        final Map<RequestOutcome, Long> requestOutcomes = requestOutcomes(requests);
+        final Latency latency = latency(requests, subscriptions);
+
         final Map<String, Long> duplicateDeliveries = new LinkedHashMap<>();
         duplicateDeliveries.put("subscription-service", subscriptionDao.duplicateDeliveries());
         duplicateDeliveries.put("payment-service", paymentDao.duplicateDeliveries());
-        final long duplicateRequestCount = pspDao.duplicateRequests();
 
         return new Evaluation(
+                converged,
                 invariantResults,
                 statusCounts,
                 paid.size(),
                 totalChargeCount,
                 duplicateDeliveries,
-                duplicateRequestCount);
+                duplicateRequestCount,
+                requestOutcomes,
+                latency,
+                subscriptions);
+    }
+
+    private static InvariantResult invariantResult(Collection<UUID> violations) {
+        return new InvariantResult(violations.isEmpty() ? Verdict.PASS : Verdict.FAIL, List.copyOf(violations));
     }
 
     private static Set<UUID> difference(Set<UUID> left, Set<UUID> right) {
@@ -75,5 +109,59 @@ public class Evaluator {
                 .filter(entry -> entry.getValue() > 1)
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toSet());
+    }
+
+    private static StatusCounts statusCounts(List<SubscriptionRow> subscriptions) {
+        final Map<String, Long> counts = subscriptions.stream()
+                .collect(Collectors.groupingBy(SubscriptionRow::status, Collectors.counting()));
+
+        return new StatusCounts(
+                counts.getOrDefault("PENDING", 0L),
+                counts.getOrDefault("ACTIVE", 0L),
+                counts.getOrDefault("FAILED", 0L));
+    }
+
+    private static Map<RequestOutcome, Long> requestOutcomes(List<RequestResult> requests) {
+        final Map<RequestOutcome, Long> outcomes = new EnumMap<>(RequestOutcome.class);
+        // every outcome is present, even with 0, so the result of every run has the same keys
+        for (RequestOutcome outcome : RequestOutcome.values()) {
+            outcomes.put(outcome, 0L);
+        }
+        for (RequestResult request : requests) {
+            outcomes.merge(request.outcome(), 1L, Long::sum);
+        }
+        return outcomes;
+    }
+
+    private static Latency latency(List<RequestResult> requests, List<SubscriptionRow> subscriptions) {
+        // the latency of the load subscriptions only: the warm-up ones were created on a cold stack
+        final Set<UUID> loadCustomers = requests.stream()
+                .map(RequestResult::customerId)
+                .collect(Collectors.toSet());
+
+        final List<Long> latencies = new ArrayList<>();
+        for (SubscriptionRow subscriptionRow : subscriptions) {
+            if (loadCustomers.contains(subscriptionRow.customerId()) && subscriptionRow.completedAt() != null) {
+                final Duration elapsed = Duration.between(subscriptionRow.createdAt(), subscriptionRow.completedAt());
+                latencies.add(elapsed.toMillis());
+            }
+        }
+
+        if (latencies.isEmpty()) {
+            return new Latency(0, null, null, null);
+        }
+
+        Collections.sort(latencies);
+        return new Latency(
+                latencies.size(),
+                percentile(latencies, PERCENTILE_50),
+                percentile(latencies, PERCENTILE_95),
+                latencies.getLast());
+    }
+
+    private static long percentile(List<Long> sorted, double percentile) {
+        // nearest-rank: e.g. p95 of 100 values is the 95th smallest
+        final int index = (int) Math.ceil(percentile * sorted.size()) - 1;
+        return sorted.get(index);
     }
 }

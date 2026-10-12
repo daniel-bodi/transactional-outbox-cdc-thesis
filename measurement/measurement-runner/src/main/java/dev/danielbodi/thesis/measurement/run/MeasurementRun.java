@@ -1,22 +1,20 @@
 package dev.danielbodi.thesis.measurement.run;
 
-import dev.danielbodi.thesis.measurement.properties.MeasurementProperties;
-import dev.danielbodi.thesis.measurement.docker.DockerCompose;
-import dev.danielbodi.thesis.measurement.evaluation.ConvergenceService;
-import dev.danielbodi.thesis.measurement.evaluation.Evaluation;
+import dev.danielbodi.thesis.measurement.docker.StackService;
 import dev.danielbodi.thesis.measurement.evaluation.Evaluator;
+import dev.danielbodi.thesis.measurement.evaluation.model.Evaluation;
 import dev.danielbodi.thesis.measurement.load.LoadGenerator;
-import dev.danielbodi.thesis.measurement.load.RequestOutcome;
 import dev.danielbodi.thesis.measurement.load.RequestResult;
 import dev.danielbodi.thesis.measurement.load.WarmUpService;
+import dev.danielbodi.thesis.measurement.properties.MeasurementProperties;
+import dev.danielbodi.thesis.measurement.result.ResultService;
 import dev.danielbodi.thesis.measurement.scenario.Scenario;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @author danielbodi
@@ -27,53 +25,27 @@ import java.util.stream.Collectors;
 public class MeasurementRun {
 
     private final MeasurementProperties properties;
-    private final DockerCompose dockerCompose;
+    private final StackService stackService;
     private final WarmUpService warmUpService;
     private final LoadGenerator loadGenerator;
-    private final ConvergenceService convergenceService;
     private final Evaluator evaluator;
+    private final ResultService resultService;
 
     public void execute(Scenario scenario) {
-        log.info("Run of scenario [{}] with environment [{}]", scenario, scenario.getEnvironment());
+        log.info("Run of scenario [{}] started with environment [{}]", scenario, scenario.getEnvironment());
+        final Instant startedAt = Instant.now();
 
         try {
-            // a run always starts from empty volumes
-            // anything left of the stack (a dev stack, an aborted run) is removed
-            dockerCompose.down();
+            stackService.setUp(scenario);
 
-            dockerCompose.up(scenario.getEnvironment());
-            if (scenario.getVariant().usesConnectors()) {
-                dockerCompose.registerConnectors();
-            }
-
-            log.info("The docker compose stack is up and running");
-
-            warmUpService.warmUp(properties.warmupCount(), properties.loadRatePerSecond(), properties.warmupTimeout());
-
+            warmUpService.warmUp(properties.warmUpCount(), properties.loadRatePerSecond(), properties.warmUpTimeout());
             final List<RequestResult> requests = loadGenerator.generate(properties.loadCount(), properties.loadRatePerSecond());
-            log.info("Load completed: {}", outcomes(requests));
-
-            // the run is evaluated once every subscription left PENDING, or the timeout is over
-            final boolean converged = convergenceService.awaitNoPending(properties.convergenceTimeout());
-
-            final Evaluation evaluation = evaluator.evaluate();
-            logSummary(converged, evaluation);
+            final Evaluation evaluation = evaluator.evaluate(requests, properties.convergenceTimeout());
+            resultService.save(scenario, startedAt, requests, evaluation);
         } finally {
-            dockerCompose.down();
+            stackService.tearDown();
         }
-    }
 
-    private static void logSummary(boolean converged, Evaluation evaluation) {
-        log.info("Converged: {}", converged);
-        evaluation.invariantResults().forEach((invariant, result) -> log.info("  {} {} {} ({} violations)",
-                invariant.getThesisId(), invariant, result.verdict(), result.violations().size()));
-        log.info("  subscriptions {}, payments {}, charges {}",
-                evaluation.subscriptions(), evaluation.payments(), evaluation.charges());
-        log.info("  duplicate deliveries {}, duplicate PSP requests {}",
-                evaluation.duplicateDeliveries(), evaluation.duplicateRequests());
-    }
-
-    private static Map<RequestOutcome, Long> outcomes(List<RequestResult> requests) {
-        return requests.stream().collect(Collectors.groupingBy(RequestResult::outcome, Collectors.counting()));
+        log.info("Run of scenario [{}] finished", scenario);
     }
 }

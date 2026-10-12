@@ -1,4 +1,4 @@
-package dev.danielbodi.thesis.measurement.evaluation;
+package dev.danielbodi.thesis.measurement.evaluation.model;
 
 import lombok.Getter;
 
