@@ -20,7 +20,6 @@ public record MeasurementProperties(
         @NotNull Path resultsDirectory,
         @NotNull String kafkaConnectUrl,
         @NotNull String subscriptionServiceUrl,
-        @Positive int warmUpCount,
         @Positive int loadCount,
         @Positive int loadRatePerSecond,
         @NotNull Duration warmUpTimeout,

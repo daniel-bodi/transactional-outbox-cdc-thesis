@@ -164,9 +164,10 @@ services:
     restart: on-failure
     healthcheck:
       test: [ "CMD-SHELL", "curl -sf http://localhost:8080/actuator/health" ]
-      interval: 5s
+      # the healthy event marks the end of the outage after a crash point, 1 s keeps it precise
+      interval: 1s
       timeout: 5s
-      retries: 30
+      retries: 150
 
   payment-service:
     build:

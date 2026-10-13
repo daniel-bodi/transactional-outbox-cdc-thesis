@@ -16,15 +16,17 @@ import java.util.List;
 @RequiredArgsConstructor
 public class WarmUpService {
 
+    public static final int WARM_UP_COUNT = 10;
+
     private final LoadGenerator loadGenerator;
     private final ConvergenceService convergenceService;
 
     // the stack is ready when the warm-up subscriptions made the full round trip:
     // the services are up, the consumers have their partitions, the connectors run
-    public void warmUp(int warmUpCount, int ratePerSecond, Duration timeout) {
-        log.info("Starting warm-up with [{}] requests and [{}] requests per second", warmUpCount, ratePerSecond);
+    public void warmUp(int ratePerSecond, Duration timeout) {
+        log.info("Starting warm-up with [{}] requests and [{}] requests per second", WARM_UP_COUNT, ratePerSecond);
 
-        final List<RequestResult> warmUpResults = loadGenerator.generate(warmUpCount, ratePerSecond);
+        final List<RequestResult> warmUpResults = loadGenerator.generate(WARM_UP_COUNT, ratePerSecond);
 
         final List<RequestResult> failed = warmUpResults.stream()
                 .filter(request -> request.outcome() != RequestOutcome.CREATED)

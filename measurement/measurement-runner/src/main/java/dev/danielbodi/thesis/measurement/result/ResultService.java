@@ -5,6 +5,7 @@ import dev.danielbodi.thesis.measurement.evaluation.model.Evaluation;
 import dev.danielbodi.thesis.measurement.evaluation.model.Invariant;
 import dev.danielbodi.thesis.measurement.evaluation.model.InvariantResult;
 import dev.danielbodi.thesis.measurement.load.RequestResult;
+import dev.danielbodi.thesis.measurement.load.WarmUpService;
 import dev.danielbodi.thesis.measurement.properties.MeasurementProperties;
 import dev.danielbodi.thesis.measurement.result.model.EntityCounts;
 import dev.danielbodi.thesis.measurement.result.model.InvariantOutcome;
@@ -66,7 +67,7 @@ public class ResultService {
                 scenario,
                 scenario.getVariant(),
                 scenario.getEnvironment(),
-                properties.warmUpCount(),
+                WarmUpService.WARM_UP_COUNT,
                 properties.loadCount(),
                 properties.loadRatePerSecond(),
                 startedAt,

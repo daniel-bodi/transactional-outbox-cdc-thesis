@@ -38,7 +38,7 @@ public class MeasurementRun {
         try {
             stackService.setUp(scenario);
 
-            warmUpService.warmUp(properties.warmUpCount(), properties.loadRatePerSecond(), properties.warmUpTimeout());
+            warmUpService.warmUp(properties.loadRatePerSecond(), properties.warmUpTimeout());
             final List<RequestResult> requests = loadGenerator.generate(properties.loadCount(), properties.loadRatePerSecond());
             final Evaluation evaluation = evaluator.evaluate(requests, properties.convergenceTimeout());
             resultService.save(scenario, startedAt, requests, evaluation);
