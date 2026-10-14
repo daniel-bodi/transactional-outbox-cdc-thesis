@@ -189,6 +189,7 @@ services:
       FAULT_TARGET_REACH_COUNT: ${FAULT_TARGET_REACH_COUNT:-1}
       # V0 (dual-write baseline) instead of the transactional outbox, off by default
       DUAL_WRITE_ENABLED: ${DUAL_WRITE_ENABLED:-false}
+      PAYMENT_SERVICE_PORT: 8080
       PAYMENT_DB_HOST: payment-db
       PAYMENT_DB_PORT: 5432
       PAYMENT_DB_NAME: ${PAYMENT_DB_NAME}
@@ -199,6 +200,12 @@ services:
       PSP_MOCK_HOST: psp-mock-service
       PSP_MOCK_PORT: 8080
     restart: on-failure
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -sf http://localhost:8080/actuator/health" ]
+      # the healthy event marks the end of the outage after a crash point, 1 s keeps it precise
+      interval: 1s
+      timeout: 5s
+      retries: 150
 
   psp-mock-service:
     build:
