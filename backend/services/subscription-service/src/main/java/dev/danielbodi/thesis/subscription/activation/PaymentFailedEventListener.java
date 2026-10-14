@@ -26,7 +26,7 @@ public class PaymentFailedEventListener {
 
         failSubscriptionService.fail(event.reference());
 
-        // S5d: the outcome and its processed_events row are committed, the Kafka offset is not
+        // S6: the outcome and its processed_events row are committed, the Kafka offset is not
         faultInjector.reachAfterCommit("AFTER_OUTCOME_COMMIT");
     }
 }

@@ -40,7 +40,7 @@ public class ChargePaymentService {
 
         final PspChargeResponse response = pspClient.charge(reference, amount);
 
-        // S5b: the provider has charged, nothing is committed yet
+        // S5: the provider has charged, nothing is committed yet
         faultInjector.reach("AFTER_PSP_CALL");
 
         final String providerReference = response.chargeId().toString();
