@@ -19,9 +19,10 @@ services:
       - subscription-db-data:/var/lib/postgresql
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${SUBSCRIPTION_DB_USER} -d ${SUBSCRIPTION_DB_NAME}" ]
-      interval: 5s
+      # the healthy event marks the end of the outage after it is killed (S4), 1 s keeps it precise
+      interval: 1s
       timeout: 5s
-      retries: 10
+      retries: 150
 
   payment-db:
     image: postgres:18.6

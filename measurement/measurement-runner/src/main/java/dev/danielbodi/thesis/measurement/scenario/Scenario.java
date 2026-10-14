@@ -42,27 +42,6 @@ public enum Scenario {
             "FAULT_TARGET_REACH_COUNT", afterWarmUp(50),
             "PSP_IDEMPOTENCYKEY_ENABLED", "true")),
 
-    // S5b-V1: the payment-service crashes after the provider call, the provider has no idempotency key support
-    S5B_V1_KEY_OFF(Variant.V1, Map.of(
-            "DUAL_WRITE_ENABLED", "false",
-            "FAULT_ACTIVE_CRASH_POINT_NAME", "AFTER_PSP_CALL",
-            "FAULT_TARGET_REACH_COUNT", afterWarmUp(50),
-            "PSP_IDEMPOTENCYKEY_ENABLED", "false")),
-
-    // S5b-V1: the payment-service crashes after the provider call, the provider has idempotency key support
-    S5B_V1_KEY_ON(Variant.V1, Map.of(
-            "DUAL_WRITE_ENABLED", "false",
-            "FAULT_ACTIVE_CRASH_POINT_NAME", "AFTER_PSP_CALL",
-            "FAULT_TARGET_REACH_COUNT", afterWarmUp(50),
-            "PSP_IDEMPOTENCYKEY_ENABLED", "true")),
-
-    // S5d-V1: the subscription-service crashes after the outcome commit, before the Kafka offset commit
-    S5D_V1(Variant.V1, Map.of(
-            "DUAL_WRITE_ENABLED", "false",
-            "FAULT_ACTIVE_CRASH_POINT_NAME", "AFTER_OUTCOME_COMMIT",
-            "FAULT_TARGET_REACH_COUNT", afterWarmUp(50),
-            "PSP_IDEMPOTENCYKEY_ENABLED", "true")),
-
     // S2-V1: the kafka-connect (debezium) is killed at the 50th load request and started again 10 s later
     S2_V1(Variant.V1, Map.of(
             "DUAL_WRITE_ENABLED", "false",
@@ -85,7 +64,37 @@ public enum Scenario {
             "FAULT_ACTIVE_CRASH_POINT_NAME", "",
             "FAULT_TARGET_REACH_COUNT", "1",
             "PSP_IDEMPOTENCYKEY_ENABLED", "true"),
-            new PlannedOutage("kafka", 50, Duration.ofSeconds(10)));
+            new PlannedOutage("kafka", 50, Duration.ofSeconds(10))),
+
+    // S4-V1: the subscription database is killed at the 50th load request and started again 10 s later,
+    // the subscription-service rejects the requests meanwhile, the payment-service keeps working
+    S4_V1(Variant.V1, Map.of(
+            "DUAL_WRITE_ENABLED", "false",
+            "FAULT_ACTIVE_CRASH_POINT_NAME", "",
+            "FAULT_TARGET_REACH_COUNT", "1",
+            "PSP_IDEMPOTENCYKEY_ENABLED", "true"),
+            new PlannedOutage("subscription-db", 50, Duration.ofSeconds(10))),
+
+    // S5-V1: the payment-service crashes after the provider call, before its commit, the provider has no idempotency key support
+    S5_V1_WITHOUT_KEY(Variant.V1, Map.of(
+            "DUAL_WRITE_ENABLED", "false",
+            "FAULT_ACTIVE_CRASH_POINT_NAME", "AFTER_PSP_CALL",
+            "FAULT_TARGET_REACH_COUNT", afterWarmUp(50),
+            "PSP_IDEMPOTENCYKEY_ENABLED", "false")),
+
+    // S5-V1: the payment-service crashes after the provider call, before its commit, the provider absorbs the repeated call by its idempotency key
+    S5_V1_WITH_KEY(Variant.V1, Map.of(
+            "DUAL_WRITE_ENABLED", "false",
+            "FAULT_ACTIVE_CRASH_POINT_NAME", "AFTER_PSP_CALL",
+            "FAULT_TARGET_REACH_COUNT", afterWarmUp(50),
+            "PSP_IDEMPOTENCYKEY_ENABLED", "true")),
+
+    // S6-V1: the subscription-service crashes after the outcome commit, before the Kafka offset commit
+    S6_V1(Variant.V1, Map.of(
+            "DUAL_WRITE_ENABLED", "false",
+            "FAULT_ACTIVE_CRASH_POINT_NAME", "AFTER_OUTCOME_COMMIT",
+            "FAULT_TARGET_REACH_COUNT", afterWarmUp(50),
+            "PSP_IDEMPOTENCYKEY_ENABLED", "true"));
 
     private final Variant variant;
     private final Map<String, String> environment;
