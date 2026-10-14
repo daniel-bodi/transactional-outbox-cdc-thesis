@@ -18,7 +18,7 @@ public class PaymentRequestedEventListener {
     private final ChargePaymentService chargePaymentService;
 
     @Idempotent
-    @KafkaListener(topics = "outbox.event.payment_requested")
+    @KafkaListener(topics = "outbox.event.payment_requested", properties = "group.instance.id=payment-service-payment-requested")
     public void on(PaymentRequestedEvent request) {
         log.info("Received payment request: reference=[{}] amount=[{}]",
                 request.reference(), request.amount());
