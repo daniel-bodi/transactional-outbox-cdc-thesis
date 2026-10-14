@@ -85,9 +85,10 @@ services:
       - kafka-data:/var/lib/kafka/data
     healthcheck:
       test: [ "CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list" ]
-      interval: 5s
+      # the healthy event marks the end of the outage after it is killed (S3), 1 s keeps it precise
+      interval: 1s
       timeout: 5s
-      retries: 20
+      retries: 150
 
   kafka-topics:
     image: apache/kafka:4.3.1
@@ -129,9 +130,10 @@ services:
       - "${KAFKA_CONNECT_PORT}:8083"
     healthcheck:
       test: [ "CMD-SHELL", "curl -sf http://localhost:8083/connectors" ]
-      interval: 5s
+      # the healthy event marks the end of the outage after it is killed (S2), 1 s keeps it precise
+      interval: 1s
       timeout: 5s
-      retries: 30
+      retries: 150
 
   subscription-service:
     build:

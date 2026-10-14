@@ -1,5 +1,6 @@
 package dev.danielbodi.thesis.measurement.run;
 
+import dev.danielbodi.thesis.measurement.docker.ContainerKiller;
 import dev.danielbodi.thesis.measurement.docker.StackService;
 import dev.danielbodi.thesis.measurement.evaluation.Evaluator;
 import dev.danielbodi.thesis.measurement.evaluation.model.Evaluation;
@@ -8,6 +9,7 @@ import dev.danielbodi.thesis.measurement.load.RequestResult;
 import dev.danielbodi.thesis.measurement.load.WarmUpService;
 import dev.danielbodi.thesis.measurement.properties.MeasurementProperties;
 import dev.danielbodi.thesis.measurement.result.ResultService;
+import dev.danielbodi.thesis.measurement.scenario.PlannedOutage;
 import dev.danielbodi.thesis.measurement.scenario.Scenario;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author danielbodi
@@ -26,6 +29,7 @@ public class MeasurementRun {
 
     private final MeasurementProperties properties;
     private final StackService stackService;
+    private final ContainerKiller containerKiller;
     private final WarmUpService warmUpService;
     private final LoadGenerator loadGenerator;
     private final Evaluator evaluator;
@@ -39,7 +43,12 @@ public class MeasurementRun {
             stackService.setUp(scenario);
 
             warmUpService.warmUp(properties.loadRatePerSecond(), properties.warmUpTimeout());
+
+            final Optional<PlannedOutage> plannedOutage = scenario.getPlannedOutage();
+            plannedOutage.ifPresent(outage -> containerKiller.start(outage, properties.loadRatePerSecond()));
             final List<RequestResult> requests = loadGenerator.generate(properties.loadCount(), properties.loadRatePerSecond());
+            plannedOutage.ifPresent(_ -> containerKiller.await());
+
             final Evaluation evaluation = evaluator.evaluate(requests, properties.convergenceTimeout());
             resultService.save(scenario, startedAt, requests, evaluation);
         } finally {

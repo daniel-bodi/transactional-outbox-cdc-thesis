@@ -29,6 +29,15 @@ public class DockerCompose {
         run(Map.of(), "docker", "compose", "down", "--volumes", "--remove-orphans");
     }
 
+    // SIGKILL, so the service cannot shut down gracefully (e.g. kafka-connect cannot flush its offsets)
+    public void kill(String service) {
+        run(Map.of(), "docker", "compose", "kill", service);
+    }
+
+    public void start(String service) {
+        run(Map.of(), "docker", "compose", "start", service);
+    }
+
     public void registerConnectors() {
         final Map<String, String> environment = Map.of("KAFKA_CONNECT_URL", properties.kafkaConnectUrl());
         run(environment, "./infrastructure/debezium/register-connectors.sh");
