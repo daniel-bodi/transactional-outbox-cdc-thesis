@@ -14,5 +14,6 @@ public record RunResult(
         Map<Invariant, InvariantOutcome> invariants,
         EntityCounts counts,
         Metrics metrics,
+        Timeline timeline,
         RawData rawData) {
 }

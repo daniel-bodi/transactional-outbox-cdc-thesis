@@ -1,22 +1,26 @@
 package dev.danielbodi.thesis.measurement.result;
 
 import dev.danielbodi.thesis.measurement.database.SubscriptionRow;
+import dev.danielbodi.thesis.measurement.docker.ContainerEvent;
 import dev.danielbodi.thesis.measurement.evaluation.model.Evaluation;
 import dev.danielbodi.thesis.measurement.evaluation.model.Invariant;
 import dev.danielbodi.thesis.measurement.evaluation.model.InvariantResult;
 import dev.danielbodi.thesis.measurement.load.RequestResult;
 import dev.danielbodi.thesis.measurement.load.WarmUpService;
 import dev.danielbodi.thesis.measurement.properties.MeasurementProperties;
+import dev.danielbodi.thesis.measurement.result.model.ContainerEventEntry;
 import dev.danielbodi.thesis.measurement.result.model.EntityCounts;
 import dev.danielbodi.thesis.measurement.result.model.InvariantOutcome;
 import dev.danielbodi.thesis.measurement.result.model.Latency;
 import dev.danielbodi.thesis.measurement.result.model.Metrics;
+import dev.danielbodi.thesis.measurement.result.model.Outage;
 import dev.danielbodi.thesis.measurement.result.model.RawData;
 import dev.danielbodi.thesis.measurement.result.model.RequestEntry;
 import dev.danielbodi.thesis.measurement.result.model.RunMetadata;
 import dev.danielbodi.thesis.measurement.result.model.RunResult;
 import dev.danielbodi.thesis.measurement.result.model.SubscriptionEntry;
 import dev.danielbodi.thesis.measurement.result.model.SubscriptionStatusCounts;
+import dev.danielbodi.thesis.measurement.result.model.Timeline;
 import dev.danielbodi.thesis.measurement.scenario.Scenario;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,6 +59,7 @@ public class ResultService {
                 invariants(evaluation),
                 counts(evaluation),
                 metrics(evaluation),
+                timeline(evaluation),
                 rawData(requests, evaluation));
 
         logSummary(result);
@@ -106,10 +111,25 @@ public class ResultService {
                 evaluation.requestOutcomes());
     }
 
+    private static Timeline timeline(Evaluation evaluation) {
+        return new Timeline(
+                // a lambda instead of a method reference: the evaluation Outage has the same name
+                evaluation.timeline().outages().stream().map(outage -> new Outage(
+                        outage.container(),
+                        outage.exitCode(),
+                        outage.diedAt(),
+                        outage.healthyAt(),
+                        outage.unavailableMillis())).toList(),
+                evaluation.timeline().recoveryMillis(),
+                evaluation.timeline().requestOutcomesDuringOutages(),
+                evaluation.timeline().committedWithoutCreatedResponse());
+    }
+
     private static RawData rawData(List<RequestResult> requests, Evaluation evaluation) {
         return new RawData(
                 requests.stream().map(ResultService::requestEntry).toList(),
-                evaluation.subscriptions().stream().map(ResultService::subscriptionEntry).toList());
+                evaluation.subscriptions().stream().map(ResultService::subscriptionEntry).toList(),
+                evaluation.timeline().containerEvents().stream().map(ResultService::containerEventEntry).toList());
     }
 
     private static RequestEntry requestEntry(RequestResult request) {
@@ -133,6 +153,10 @@ public class ResultService {
                 subscription.completedAt());
     }
 
+    private static ContainerEventEntry containerEventEntry(ContainerEvent event) {
+        return new ContainerEventEntry(event.at(), event.container(), event.action(), event.exitCode());
+    }
+
     private static void logSummary(RunResult result) {
         log.info("Run [{}] finished, converged: {}", result.metadata().id(), result.converged());
         result.invariants().forEach((invariant, outcome) -> log.info("  {} {} {} ({} violations)",
@@ -142,6 +166,11 @@ public class ResultService {
         log.info("  duplicate deliveries {}, duplicate PSP requests {}",
                 result.metrics().duplicateDeliveries(), result.metrics().duplicateRequests());
         log.info("  requests {}, latency {}", result.metrics().requestOutcomes(), result.metrics().latencyMillis());
+        result.timeline().outages().forEach(outage -> log.info("  outage of {}: unavailable for {} ms",
+                outage.container(), outage.unavailableMillis()));
+        log.info("  recovery {} ms, requests during outages {}, committed without 201: {}",
+                result.timeline().recoveryMillis(), result.timeline().requestOutcomesDuringOutages(),
+                result.timeline().committedWithoutCreatedResponse());
     }
 
     private void writeResultFile(RunResult result) {

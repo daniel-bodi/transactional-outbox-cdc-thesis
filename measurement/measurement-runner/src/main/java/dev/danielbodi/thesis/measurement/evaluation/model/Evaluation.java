@@ -20,5 +20,6 @@ public record Evaluation(
         long duplicateRequests,
         Map<RequestOutcome, Long> requestOutcomes,
         Latency latency,
+        Timeline timeline,
         List<SubscriptionRow> subscriptions) {
 }

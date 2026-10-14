@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 public class StackService {
 
     private final DockerCompose dockerCompose;
+    private final ContainerEventRecorder containerEventRecorder;
 
     public void setUp(Scenario scenario) {
         // a run always starts from empty volumes
@@ -25,10 +26,14 @@ public class StackService {
             dockerCompose.registerConnectors();
         }
 
+        // started after the cleanup and the startup, so their events are not on the timeline
+        containerEventRecorder.start();
+
         log.info("The docker compose stack is up and running");
     }
 
     public void tearDown() {
+        containerEventRecorder.stop();
         dockerCompose.down();
     }
 }
