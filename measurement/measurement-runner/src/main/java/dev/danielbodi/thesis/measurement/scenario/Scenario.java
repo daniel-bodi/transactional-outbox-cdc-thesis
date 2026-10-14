@@ -37,8 +37,28 @@ public enum Scenario {
             "DUAL_WRITE_ENABLED", "false",
             "FAULT_ACTIVE_CRASH_POINT_NAME", "AFTER_SUBSCRIPTION_COMMIT",
             "FAULT_TARGET_REACH_COUNT", afterWarmUp(50),
-            "PSP_IDEMPOTENCYKEY_ENABLED", "true"));
+            "PSP_IDEMPOTENCYKEY_ENABLED", "true")),
 
+    // S5b-V1: the payment-service crashes after the provider call, the provider has no idempotency key support
+    S5B_V1_KEY_OFF(Variant.V1, Map.of(
+            "DUAL_WRITE_ENABLED", "false",
+            "FAULT_ACTIVE_CRASH_POINT_NAME", "AFTER_PSP_CALL",
+            "FAULT_TARGET_REACH_COUNT", afterWarmUp(50),
+            "PSP_IDEMPOTENCYKEY_ENABLED", "false")),
+
+    // S5b-V1: the payment-service crashes after the provider call, the provider has idempotency key support
+    S5B_V1_KEY_ON(Variant.V1, Map.of(
+            "DUAL_WRITE_ENABLED", "false",
+            "FAULT_ACTIVE_CRASH_POINT_NAME", "AFTER_PSP_CALL",
+            "FAULT_TARGET_REACH_COUNT", afterWarmUp(50),
+            "PSP_IDEMPOTENCYKEY_ENABLED", "true")),
+
+    // S5d-V1: the subscription-service crashes after the outcome commit, before the Kafka offset commit
+    S5D_V1(Variant.V1, Map.of(
+            "DUAL_WRITE_ENABLED", "false",
+            "FAULT_ACTIVE_CRASH_POINT_NAME", "AFTER_OUTCOME_COMMIT",
+            "FAULT_TARGET_REACH_COUNT", afterWarmUp(50),
+            "PSP_IDEMPOTENCYKEY_ENABLED", "true"));
 
     private final Variant variant;
     private final Map<String, String> environment;
