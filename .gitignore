@@ -46,3 +46,6 @@ logs/
 ### Measurement results ###
 measurement/results/*
 !measurement/results/.gitkeep
+
+### Measurement analysis ###
+measurement/analysis/.venv/
