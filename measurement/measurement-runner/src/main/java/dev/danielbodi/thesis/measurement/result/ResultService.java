@@ -8,8 +8,12 @@ import dev.danielbodi.thesis.measurement.evaluation.model.InvariantResult;
 import dev.danielbodi.thesis.measurement.load.RequestResult;
 import dev.danielbodi.thesis.measurement.load.WarmUpService;
 import dev.danielbodi.thesis.measurement.properties.MeasurementProperties;
+import dev.danielbodi.thesis.measurement.run.FailedRun;
+import dev.danielbodi.thesis.measurement.run.RunContext;
+import dev.danielbodi.thesis.measurement.result.model.CampaignResult;
 import dev.danielbodi.thesis.measurement.result.model.ContainerEventEntry;
 import dev.danielbodi.thesis.measurement.result.model.EntityCounts;
+import dev.danielbodi.thesis.measurement.result.model.FailedRunEntry;
 import dev.danielbodi.thesis.measurement.result.model.InvariantOutcome;
 import dev.danielbodi.thesis.measurement.result.model.Latency;
 import dev.danielbodi.thesis.measurement.result.model.Metrics;
@@ -32,8 +36,6 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -46,15 +48,12 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ResultService {
 
-    private static final DateTimeFormatter RUN_ID_TIME_FORMAT =
-            DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").withZone(ZoneOffset.UTC);
-
     private final MeasurementProperties properties;
     private final JsonMapper jsonMapper;
 
-    public void save(Scenario scenario, Instant startedAt, List<RequestResult> requests, Evaluation evaluation) {
+    public void saveRun(RunContext context, Instant startedAt, List<RequestResult> requests, Evaluation evaluation) {
         final RunResult result = new RunResult(
-                metadata(scenario, startedAt),
+                metadata(context, startedAt),
                 evaluation.converged(),
                 invariants(evaluation),
                 counts(evaluation),
@@ -62,13 +61,34 @@ public class ResultService {
                 timeline(evaluation),
                 rawData(requests, evaluation));
 
-        logSummary(result);
-        writeResultFile(result);
+        logRunSummary(result);
+        writeFile(context.campaignId(), result.metadata().id() + ".json", result);
     }
 
-    private RunMetadata metadata(Scenario scenario, Instant startedAt) {
+    public void saveCampaign(String campaignId, List<Scenario> scenarios, Instant startedAt, int runCount,
+                             List<FailedRun> failedRuns) {
+        final CampaignResult result = new CampaignResult(
+                campaignId,
+                scenarios,
+                properties.repetitions(),
+                WarmUpService.WARM_UP_COUNT,
+                properties.loadCount(),
+                properties.loadRatePerSecond(),
+                startedAt,
+                Instant.now(),
+                runCount,
+                failedRuns.stream().map(ResultService::failedRunEntry).toList());
+
+        logCampaignSummary(result);
+        writeFile(campaignId, "campaign.json", result);
+    }
+
+    private RunMetadata metadata(RunContext context, Instant startedAt) {
+        final Scenario scenario = context.scenario();
         return new RunMetadata(
-                "%s-%s".formatted(scenario, RUN_ID_TIME_FORMAT.format(startedAt)),
+                "%s-%d".formatted(scenario, context.repetition()),
+                context.campaignId(),
+                context.repetition(),
                 scenario,
                 scenario.getVariant(),
                 scenario.getEnvironment(),
@@ -153,11 +173,15 @@ public class ResultService {
                 subscription.completedAt());
     }
 
+    private static FailedRunEntry failedRunEntry(FailedRun failedRun) {
+        return new FailedRunEntry(failedRun.scenario(), failedRun.repetition(), failedRun.error());
+    }
+
     private static ContainerEventEntry containerEventEntry(ContainerEvent event) {
         return new ContainerEventEntry(event.at(), event.container(), event.action(), event.exitCode());
     }
 
-    private static void logSummary(RunResult result) {
+    private static void logRunSummary(RunResult result) {
         log.info("Run [{}] finished, converged: {}", result.metadata().id(), result.converged());
         result.invariants().forEach((invariant, outcome) -> log.info("  {} {} {} ({} violations)",
                 outcome.thesisId(), invariant, outcome.verdict(), outcome.violationCount()));
@@ -173,12 +197,19 @@ public class ResultService {
                 result.timeline().committedWithoutCreatedResponse());
     }
 
-    private void writeResultFile(RunResult result) {
+    private static void logCampaignSummary(CampaignResult result) {
+        log.info("Campaign [{}] finished, [{}] of [{}] runs succeeded",
+                result.id(), result.runCount() - result.failedRuns().size(), result.runCount());
+        result.failedRuns().forEach(failedRun -> log.info("  failed: scenario [{}], repetition [{}]: {}",
+                failedRun.scenario(), failedRun.repetition(), failedRun.error()));
+    }
+
+    private void writeFile(String campaignId, String fileName, Object content) {
         try {
-            final Path directory = properties.resultsDirectory().toAbsolutePath().normalize();
+            final Path directory = properties.resultsDirectory().resolve(campaignId).toAbsolutePath().normalize();
             Files.createDirectories(directory);
-            final Path file = directory.resolve(result.metadata().id() + ".json");
-            jsonMapper.writerWithDefaultPrettyPrinter().writeValue(file.toFile(), result);
+            final Path file = directory.resolve(fileName);
+            jsonMapper.writerWithDefaultPrettyPrinter().writeValue(file.toFile(), content);
             log.info("Result written to {}", file);
         } catch (IOException e) {
             throw new UncheckedIOException(e);

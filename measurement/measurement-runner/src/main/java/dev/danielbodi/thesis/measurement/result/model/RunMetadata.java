@@ -11,6 +11,8 @@ import java.util.Map;
  */
 public record RunMetadata(
         String id,
+        String campaignId,
+        int repetition,
         Scenario scenario,
         Variant variant,
         Map<String, String> environment,

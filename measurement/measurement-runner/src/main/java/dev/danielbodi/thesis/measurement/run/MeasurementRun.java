@@ -35,7 +35,8 @@ public class MeasurementRun {
     private final Evaluator evaluator;
     private final ResultService resultService;
 
-    public void execute(Scenario scenario) {
+    public void execute(RunContext context) {
+        final Scenario scenario = context.scenario();
         log.info("Run of scenario [{}] started with environment [{}]", scenario, scenario.getEnvironment());
         final Instant startedAt = Instant.now();
 
@@ -50,7 +51,7 @@ public class MeasurementRun {
             plannedOutage.ifPresent(_ -> containerKiller.await());
 
             final Evaluation evaluation = evaluator.evaluate(requests, properties.convergenceTimeout());
-            resultService.save(scenario, startedAt, requests, evaluation);
+            resultService.saveRun(context, startedAt, requests, evaluation);
         } finally {
             stackService.tearDown();
         }
