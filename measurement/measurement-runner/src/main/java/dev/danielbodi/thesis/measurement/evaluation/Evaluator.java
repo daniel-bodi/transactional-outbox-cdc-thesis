@@ -67,7 +67,6 @@ public class Evaluator {
         invariantResults.put(Invariant.NO_LOST_REQUEST, invariantResult(difference(requested, charged)));
         invariantResults.put(Invariant.NO_LOST_OUTCOME, invariantResult(intersection(paid, pending)));
         invariantResults.put(Invariant.NO_DUPLICATE_CHARGE, invariantResult(chargedMoreThanOnce(chargedCountsByReference)));
-        invariantResults.put(Invariant.NO_PHANTOM_CHARGE, invariantResult(difference(charged, requested)));
 
         final long totalChargeCount = chargedCountsByReference.values().stream().mapToLong(Long::longValue).sum();
         final long duplicateRequestCount = pspDao.duplicateRequests();

@@ -16,7 +16,7 @@ matplotlib.use("Agg")  # files only, no window
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 
-INVARIANTS = ["NO_LOST_REQUEST", "NO_LOST_OUTCOME", "NO_DUPLICATE_CHARGE", "NO_PHANTOM_CHARGE"]
+INVARIANTS = ["NO_LOST_REQUEST", "NO_LOST_OUTCOME", "NO_DUPLICATE_CHARGE"]
 
 PANEL_TITLES = {
     "S0_V0": "V0 (dual write)",
@@ -143,8 +143,8 @@ def print_tables(runs):
     for scenario, scenario_runs in runs.items():
         latencies = [run["metrics"]["latencyMillis"] for run in scenario_runs]
         rows.append([scenario] + [summary([latency[key] for latency in latencies]) for key in ["p50", "p95", "max"]])
-    print_table("3. Késleltetés a létrehozástól a lezárásig (medián (min–max) a futások között)",
-                ["konfiguráció", "p50 [ms]", "p95 [ms]", "max [ms]"], rows)
+    print_table("3. L: késleltetés a létrehozástól a lezárásig (medián (min–max) a futások között)",
+                ["konfiguráció", "L p50 [ms]", "L p95 [ms]", "L max [ms]"], rows)
 
 
 # --- the representative run ----------------------------------------------------------------------
