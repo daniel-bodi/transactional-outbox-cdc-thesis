@@ -19,12 +19,12 @@ from matplotlib.ticker import MultipleLocator
 INVARIANTS = ["NO_LOST_REQUEST", "NO_LOST_OUTCOME", "NO_DUPLICATE_CHARGE"]
 
 PANEL_TITLES = {
-    "S0_V0": "V0 (dual write)",
+    "S0_V0": "V0 (dual-write)",
     "S0_V1": "V1 (outbox + CDC)",
-    "S1_V0": "V0 (dual write)",
+    "S1_V0": "V0 (dual-write)",
     "S1_V1": "V1 (outbox + CDC)",
     "S2_V1": "V1 (outbox + CDC)",
-    "S3_V0": "V0 (dual write)",
+    "S3_V0": "V0 (dual-write)",
     "S3_V1": "V1 (outbox + CDC)",
     "S4_V1": "V1 (outbox + CDC)",
     "S5_V1_WITHOUT_KEY": "V1, idempotencia-kulcs nélkül",
@@ -33,7 +33,8 @@ PANEL_TITLES = {
 }
 
 OUTCOMES = ["CREATED", "REJECTED", "NO_RESPONSE"]
-OUTCOME_LABELS = {"CREATED": "201 Created", "REJECTED": "elutasítva (5xx)", "NO_RESPONSE": "nincs válasz"}
+OUTCOME_LABELS = {"CREATED": "sikeres kérések", "REJECTED": "elutasított kérések",
+                  "NO_RESPONSE": "válasz nélküli kérések"}
 OUTCOME_COLORS = {"CREATED": "#2e7d32", "REJECTED": "#c62828", "NO_RESPONSE": "#ef6c00"}
 PENDING_COLOR = "#1565c0"
 
@@ -215,9 +216,9 @@ def mark_outages(ax, events, end):
             continue
         healthy_at = next((t for t, c, a in events if c == container and a == "health_status: healthy" and t > died_at), end)
         started_at = next((t for t, c, a in events if c == container and a == "start" and t > died_at), None)
-        ax.axvspan(died_at, healthy_at, color="#9e9e9e", alpha=0.25, label=f"{container} nem elérhető (die → healthy)")
+        ax.axvspan(died_at, healthy_at, color="#9e9e9e", alpha=0.25, label="kiesés")
         if started_at is not None:
-            ax.axvline(started_at, color="#616161", linestyle="--", linewidth=1, label=f"{container} újraindul (start)")
+            ax.axvline(started_at, color="#616161", linestyle="--", linewidth=1, label="újraindítás")
 
 
 def draw_figure(name, panels, directory):
@@ -234,12 +235,12 @@ def draw_figure(name, panels, directory):
         for ax, panel in zip(axes, panels):
             for outcome in outcomes:
                 ax.step(*panel.cumulative(outcome, end), where="post", color=OUTCOME_COLORS[outcome], linewidth=1.8,
-                        label=f"{OUTCOME_LABELS[outcome]} (összesen)")
-            ax.step(*panel.pending(end), where="post", color=PENDING_COLOR, linewidth=1.8, label="PENDING előfizetések")
+                        label=OUTCOME_LABELS[outcome])
+            ax.step(*panel.pending(end), where="post", color=PENDING_COLOR, linewidth=1.8, label="függő előfizetések")
             mark_outages(ax, panel.events, end)
             ax.set_xlim(-1, end)
             ax.set_title(PANEL_TITLES[panel.scenario])
-            ax.set_ylabel("darab")
+            ax.set_ylabel("darabszám")
             ax.xaxis.set_major_locator(MultipleLocator(5))
             ax.xaxis.set_minor_locator(MultipleLocator(1))
             ax.grid(alpha=0.35, which="major")
@@ -247,7 +248,7 @@ def draw_figure(name, panels, directory):
             # every label once, even if it is on more panels
             for handle, label in zip(*ax.get_legend_handles_labels()):
                 legend.setdefault(label, handle)
-        axes[-1].set_xlabel("idő a terhelés kezdetétől [s]")
+        axes[-1].set_xlabel("idő a mérési terhelés kezdetétől [s]")
 
         fig.tight_layout()
         # the legend below the panels, bbox_inches="tight" makes room for it
@@ -256,6 +257,37 @@ def draw_figure(name, panels, directory):
         file = directory / f"{name}.png"
         fig.savefig(file, dpi=200, bbox_inches="tight")
         plt.close(fig)
+    return file
+
+
+def load_latencies(runs):
+    # the L of every subscription of the load in every run, in milliseconds
+    values = []
+    for run in runs:
+        load_customers = {request["customerId"] for request in run["rawData"]["requests"]}
+        values += [(parse(subscription["completedAt"]) - parse(subscription["createdAt"])).total_seconds() * 1000
+                   for subscription in run["rawData"]["subscriptions"]
+                   if subscription["customerId"] in load_customers and subscription["completedAt"]]
+    return sorted(values)
+
+
+def draw_latency_figure(runs, directory):
+    # the distribution of L in the fault-free runs, on a log scale, because V1 is two orders of magnitude slower
+    fig, ax = plt.subplots(figsize=(8, 3.6))
+    for scenario, color in [("S0_V0", "#e65100"), ("S0_V1", "#1565c0")]:
+        values = load_latencies(runs[scenario])
+        share = [(index + 1) / len(values) * 100 for index in range(len(values))]
+        ax.step(values, share, where="post", color=color, linewidth=1.8,
+                label=f"{PANEL_TITLES[scenario]}, n = {len(values)}")
+    ax.set_xscale("log")
+    ax.set_xlabel("késleltetés (L) [ms], logaritmikus skála")
+    ax.set_ylabel("lezárult előfizetések [%]")
+    ax.set_ylim(0, 100)
+    ax.grid(True, which="both", alpha=0.3)
+    ax.legend(loc="lower right")
+    file = directory / "S0-latency.png"
+    fig.savefig(file, dpi=200, bbox_inches="tight")
+    plt.close(fig)
     return file
 
 
@@ -270,6 +302,8 @@ def draw_figures(runs, directory):
     for name, chosen in groups.items():
         file = draw_figure(name, [Panel(scenario, run) for scenario, run in chosen], directory)
         print(f"  {file.name}: " + ", ".join(run["metadata"]["id"] for _, run in chosen))
+    if "S0_V0" in runs and "S0_V1" in runs:
+        print(f"  {draw_latency_figure(runs, directory).name}: az S0 összes futása")
 
 
 def main():
